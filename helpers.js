@@ -48,3 +48,15 @@ export const findBallAtPoint = (balls, { x, y }) => {
     }
   });
 };
+
+export const getBoundedPosition = (canvasManager, { x, y }, padding = 16) => {
+  const paddedBoundedX = Math.min(
+    canvasManager.getWidth() - padding,
+    Math.max(padding, x)
+  );
+  const paddedBoundedY = Math.min(
+    canvasManager.getHeight() - padding,
+    Math.max(padding, y)
+  );
+  return { x: paddedBoundedX, y: paddedBoundedY };
+};

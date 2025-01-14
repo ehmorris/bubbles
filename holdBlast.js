@@ -50,7 +50,12 @@ export const drawHoldBlastPreview = (
   CTX.restore();
 };
 
-export const makeHoldBlast = (canvasManager, { x, y }, holdDuration) => {
+export const makeHoldBlast = (
+  canvasManager,
+  scoreStore,
+  { x, y },
+  holdDuration
+) => {
   const CTX = canvasManager.getContext();
   const blastStart = Date.now();
   const blastDuration = 400;
@@ -61,6 +66,9 @@ export const makeHoldBlast = (canvasManager, { x, y }, holdDuration) => {
     easeOutSine
   );
   let gone = false;
+  let numCollisions = 0;
+
+  const logCollision = () => numCollisions++;
 
   const getBlastProgress = () =>
     clampedProgress(0, blastDuration, Date.now() - blastStart);
@@ -83,7 +91,10 @@ export const makeHoldBlast = (canvasManager, { x, y }, holdDuration) => {
 
   const draw = () => {
     if (!gone) {
-      if (Date.now() - blastStart > blastDuration) gone = true;
+      if (Date.now() - blastStart > blastDuration) {
+        gone = true;
+        scoreStore.recordBlast({ x, y }, startSize, numCollisions);
+      }
 
       CTX.save();
       CTX.shadowColor = red;
@@ -107,6 +118,7 @@ export const makeHoldBlast = (canvasManager, { x, y }, holdDuration) => {
     getRelativeVelocity,
     getRadius,
     draw,
+    logCollision,
     isGone: () => gone,
     causesShake: () => true,
     isSlingshot: () => false,

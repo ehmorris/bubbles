@@ -1,8 +1,9 @@
 body {
   --blue: #2d2d74;
+  --blue-background: #070729;
   margin: 0;
   overflow: hidden;
-  background: var(--blue);
+  background: var(--blue-background);
   font: 500 100vmin -apple-system, BlinkMacSystemFont, sans-serif;
   touch-action: none;
   -webkit-touch-callout: none;
@@ -24,12 +25,15 @@ body {
 }
 
 canvas {
+  background: var(--blue);
   display: block;
+  margin: auto;
   animation: introAnimation 400ms 150ms ease-in-out both;
   touch-action: none;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
+  box-shadow: 0 0 64px rgba(0, 0, 0, 0.4);
 }
 
 div {

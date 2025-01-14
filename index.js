@@ -1,10 +1,12 @@
 import { makeCanvasManager } from "./canvas.js";
-import { BLAST_MAX_DURATION } from "./constants.js";
+import { BLAST_MAX_DURATION, FONT, FONT_WEIGHT_NORMAL } from "./constants.js";
 import {
   animate,
+  clampedProgress,
   findBallAtPoint,
   randomBetween,
   transition,
+  getBoundedPosition,
 } from "./helpers.js";
 import {
   checkParticleCollision,
@@ -22,6 +24,7 @@ import { drawScore } from "./score.js";
 import { levels, makeLevelBalls } from "./levelData.js";
 import { red } from "./colors.js";
 import { makeScoreStore } from "./scoreStore.js";
+import { easeOutBack } from "./easings.js";
 
 const URLParams = new URLSearchParams(window.location.search);
 const previewData = JSON.parse(decodeURIComponent(URLParams.get("level")));
@@ -45,6 +48,7 @@ if (previewDataPresent) {
 const canvasManager = makeCanvasManager({
   initialWidth: window.innerWidth,
   initialHeight: window.innerHeight,
+  maxWidth: 800,
   attachNode: "#canvas",
 });
 const audioManager = makeAudioManager();
@@ -90,8 +94,8 @@ function resetOngoingVisuals() {
   ripples = [];
 }
 
-document.addEventListener("pointerdown", (e) => {
-  const { pointerId, clientX: x, clientY: y } = e;
+canvasManager.getElement().addEventListener("pointerdown", (e) => {
+  const { pointerId, offsetX: x, offsetY: y } = e;
 
   if (levelManager.isInterstitialShowing()) {
     continueButtonManager.handleClick(
@@ -105,6 +109,7 @@ document.addEventListener("pointerdown", (e) => {
       makeActivePointer(
         canvasManager,
         audioManager,
+        scoreStore,
         pointerId,
         { x, y },
         onPointerTrigger
@@ -116,8 +121,8 @@ document.addEventListener("pointerdown", (e) => {
   e.preventDefault();
 });
 
-document.addEventListener("pointerup", (e) => {
-  const { pointerId, clientX: x, clientY: y } = e;
+canvasManager.getElement().addEventListener("pointerup", (e) => {
+  const { pointerId, offsetX: x, offsetY: y } = e;
 
   activePointers.forEach((pointer, pointerIndex) => {
     if (pointerId === pointer.getId()) {
@@ -130,8 +135,8 @@ document.addEventListener("pointerup", (e) => {
   e.preventDefault();
 });
 
-document.addEventListener("pointermove", (e) => {
-  const { pointerId, clientX: x, clientY: y } = e;
+canvasManager.getElement().addEventListener("pointermove", (e) => {
+  const { pointerId, offsetX: x, offsetY: y } = e;
 
   pointerPosition = { x, y };
 
@@ -228,6 +233,8 @@ animate((deltaTime) => {
               ? ballA.pop(output.getRelativeVelocity(ballA.getPosition()))
               : ballA.pop(output.getVelocity());
 
+            output.logCollision();
+
             audioManager.playSequentialPluck();
           }
         });
@@ -243,6 +250,48 @@ animate((deltaTime) => {
     pointerTriggerOutput.forEach((b) => b.draw(deltaTime));
     balls.forEach((b) => b.draw(deltaTime));
     activePointers.forEach((p) => p.draw());
+
+    // Draw combo messages
+    if (!levelManager.isInterstitialShowing()) {
+      scoreStore.recentCombos(levelManager.getLevel()).forEach((c) => {
+        const boundedPosition = getBoundedPosition(
+          canvasManager,
+          c.position,
+          100
+        );
+        const timeElapsed = Date.now() - c.timestamp;
+        const fadeInProgress = clampedProgress(0, 400, timeElapsed);
+        const scaleInProgress = clampedProgress(0, 800, timeElapsed);
+        const rotateProgress = clampedProgress(0, 1600, timeElapsed);
+        const rotateIn = transition(
+          -Math.PI / 24,
+          Math.PI / 80,
+          rotateProgress,
+          easeOutBack
+        );
+        const scaleIn = transition(0, 1, scaleInProgress, easeOutBack);
+        const fadeIn = transition(0, 1, fadeInProgress, easeOutBack);
+
+        CTX.save();
+        CTX.globalAlpha = fadeIn;
+        CTX.translate(boundedPosition.x, boundedPosition.y);
+        CTX.rotate(rotateIn);
+        CTX.scale(scaleIn, scaleIn);
+        CTX.font = `${FONT_WEIGHT_NORMAL} 40px ${FONT}`;
+
+        // Shadow
+        CTX.fillStyle = "#000";
+        CTX.textAlign = "center";
+        CTX.fillText(`Popped ${c.popped}!`, 0, 0);
+
+        // Text
+        CTX.translate(-2, -3);
+        CTX.fillStyle = "#fff";
+        CTX.fillText(`Popped ${c.popped}!`, 0, 0);
+
+        CTX.restore();
+      });
+    }
 
     levelManager.drawInterstitialMessage({
       previewInitialMessage: (msElapsed) => {

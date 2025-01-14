@@ -54,21 +54,29 @@ export const drawSlingshotPreview = (
   CTX.restore();
 };
 
-export const makeSlingshot = (canvasManager, startPosition, endPosition) => {
+export const makeSlingshot = (
+  canvasManager,
+  scoreStore,
+  startPosition,
+  endPosition
+) => {
   const CTX = canvasManager.getContext();
   const distance = Math.hypot(
     startPosition.x - endPosition.x,
     startPosition.y - endPosition.y
   );
+  const startVelocity = getVelocityFromSpeedAndHeading(
+    distance / 10,
+    getHeadingInRadsFromTwoPoints(startPosition, endPosition)
+  );
   let gone = false;
+  let numCollisions = 0;
+  let comboTrackerTimestamp = null;
 
   const baseParticle = makeParticle(canvasManager, {
     radius: slingshotRadius(distance),
     startPosition: { ...endPosition },
-    startVelocity: getVelocityFromSpeedAndHeading(
-      distance / 10,
-      getHeadingInRadsFromTwoPoints(startPosition, endPosition)
-    ),
+    startVelocity,
     gravity: GRAVITY,
     onRightPassed: onLeaveScreen,
     onBottomPassed: onLeaveScreen,
@@ -79,6 +87,20 @@ export const makeSlingshot = (canvasManager, startPosition, endPosition) => {
   function onLeaveScreen() {
     gone = true;
   }
+
+  const logCollision = () => {
+    numCollisions++;
+
+    if (numCollisions > 1) {
+      scoreStore.updateSlingshot(comboTrackerTimestamp, numCollisions);
+    } else {
+      comboTrackerTimestamp = scoreStore.recordSlingshot(
+        baseParticle.getPosition(),
+        startVelocity,
+        numCollisions
+      );
+    }
+  };
 
   const draw = (deltaTime) => {
     if (!gone) {
@@ -103,6 +125,7 @@ export const makeSlingshot = (canvasManager, startPosition, endPosition) => {
     setPosition: baseParticle.setPosition,
     setVelocity: baseParticle.setVelocity,
     draw,
+    logCollision,
     isGone: () => gone,
     causesShake: () => false,
     isSlingshot: () => true,
