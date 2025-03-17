@@ -31,7 +31,7 @@ export const makeLevelManager = (
     canvasManager,
     {
       xPos: canvasManager.getWidth() / 2,
-      yPos: canvasManager.getHeight() / 2 - circleRadius + 10,
+      yPos: canvasManager.getHeight() / 2 - circleRadius + 8,
       textAlign: "center",
       verticalAlign: "center",
       fontSize: 32,
@@ -167,7 +167,7 @@ export const makeLevelManager = (
       Date.now() - levelStarted
     );
     const yPos = transition(
-      canvasManager.getHeight() / 2 - circleRadius - 12,
+      canvasManager.getHeight() / 2 - circleRadius - 14,
       24,
       showLargeDuringCountdown,
       easeOutExpo
