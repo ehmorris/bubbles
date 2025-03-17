@@ -140,12 +140,7 @@ export const makeScoreDisplay = (
     CTX.restore();
 
     CTX.save();
-    const opacityTransition = transition(
-      0,
-      1,
-      clampedProgress(0, 100, Date.now() - scoreDisplayStart),
-      easeInOutSine
-    );
+
     const slideUpTransition = transition(
       topText.getHeight() +
         topText.getBoundingBox().top +
@@ -157,7 +152,6 @@ export const makeScoreDisplay = (
       easeOutExpo
     );
 
-    CTX.globalAlpha = opacityTransition;
     CTX.translate(0, slideUpTransition);
     scoreHeight =
       topText.getHeight() +
@@ -264,38 +258,15 @@ export const makeScoreDisplay = (
   }
 
   function drawTapItem({ popped, fill }, index) {
-    const animationDelay = Math.min(index * 68, 816);
-
     if (popped) {
-      const slideUp = transition(
-        2,
-        0,
-        clampedProgress(
-          animationDelay,
-          200 + animationDelay,
-          Date.now() - scoreDisplayStart
-        ),
-        easeOutCubic
-      );
-      const scaleUp = transition(
-        0.98,
-        1,
-        clampedProgress(
-          animationDelay,
-          180 + animationDelay,
-          Date.now() - scoreDisplayStart
-        ),
-        easeOutCubic
-      );
-
       const preRenderImage = getGradientBitmap(fill);
-      CTX.translate(iconRadius, slideUp);
-      CTX.scale(scaleUp, scaleUp);
+      CTX.translate(iconRadius, 0);
       CTX.drawImage(preRenderImage, -iconRadius, 0, iconSize, iconSize);
     } else {
+      const animationDelay = Math.min(index * 160, 960);
       const rippleProgress = clampedProgress(
         animationDelay,
-        2000 + animationDelay,
+        2800 + animationDelay,
         Date.now() - scoreDisplayStart
       );
       const outerCircleRadius = transition(
@@ -356,7 +327,7 @@ export const makeScoreDisplay = (
   }
 
   function drawSlingshotItem({ popped, velocity }, index) {
-    const animationDelay = Math.min(index * 64, 768);
+    const animationDelay = Math.min(index * 88, 880);
     const textHeight = 17.2;
     const angleInRads = Math.atan2(velocity.y, velocity.x);
     const scaleIn = transition(
@@ -364,7 +335,7 @@ export const makeScoreDisplay = (
       1,
       clampedProgress(
         animationDelay,
-        600 + animationDelay,
+        800 + animationDelay,
         Date.now() - scoreDisplayStart
       ),
       easeOutQuart
@@ -374,7 +345,7 @@ export const makeScoreDisplay = (
       angleInRads,
       clampedProgress(
         animationDelay,
-        600 + animationDelay,
+        880 + animationDelay,
         Date.now() - scoreDisplayStart
       ),
       easeOutBack
@@ -431,7 +402,7 @@ export const makeScoreDisplay = (
       1,
       clampedProgress(
         animationDelay,
-        300 + animationDelay,
+        800 + animationDelay,
         Date.now() - scoreDisplayStart
       ),
       easeOutQuad
