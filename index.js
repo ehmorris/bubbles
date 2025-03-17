@@ -353,7 +353,7 @@ animate((deltaTime) => {
             verticalAlign: "center",
           },
           tutorialManager.isTutorialCompletedThisSession()
-            ? ["You’re ready", "", "Eyes up top…"]
+            ? ["Bubbles fall from the top"]
             : ["Pop the bubble"]
         ).draw(msElapsed);
         interstitialButtonManager.draw(deltaTime, msElapsed, {
@@ -454,10 +454,6 @@ function handleGameClick(currentTapPosition, ballAtPointOfInitialTap) {
 
 function onPointerTrigger(output) {
   pointerTriggerOutput.push(output);
-
-  if (!tutorialManager.isTutorialComplete()) {
-    tutorialManager.logTriggerOutput(output);
-  }
 }
 
 function onPop() {
