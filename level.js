@@ -101,13 +101,12 @@ export const makeLevelManager = (
     // "Level 1". However on subsequent  interstitials we want to show the
     // completed level aka the previous level, and only transition the level
     // indicator once the player has advanced by hitting "Continue"
-    else if (hasCompletedInitialAdvance && !missedFirstBubble) {
+    else if (hasCompletedInitialAdvance) {
       previousLevelValue = level;
       level++;
       levelChangeStart = Date.now();
     } else {
       hasCompletedInitialAdvance = true;
-      missedFirstBubble = false;
     }
 
     levelCountdownText.updateLines([`Par of ${getLevelData().par}`]);
@@ -243,6 +242,7 @@ export const makeLevelManager = (
     showLevelInterstitial,
     dismissInterstitialAndAdvanceLevel,
     setMissedFirstBubble: () => (missedFirstBubble = true),
+    missedFirstBubble: () => missedFirstBubble,
     isLastLevel,
     onGameOver,
     isGameOver: () => gameOver,

@@ -69,7 +69,7 @@ const tutorialManager = makeTutorialManager(
   canvasManager,
   onTutorialStart,
   onTutorialAdvance,
-  onTutorialComplete
+  resetGame
 );
 const shareImageManager = makeShareImageManager(scoreStore, levelManager);
 const CTX = canvasManager.getContext();
@@ -124,7 +124,9 @@ canvasManager.getElement().addEventListener("pointerdown", (e) => {
   if (levelManager.isInterstitialShowing()) {
     interstitialButtonManager.handleClick(
       { x, y },
-      levelManager.isGameOver() || levelManager.isLastLevel()
+      levelManager.isGameOver() ||
+        levelManager.isLastLevel() ||
+        levelManager.missedFirstBubble()
         ? resetGame
         : levelManager.dismissInterstitialAndAdvanceLevel,
       shareImageManager.share
@@ -545,8 +547,4 @@ function onTutorialStart() {
 function onTutorialAdvance() {
   previousLevelBalls = balls.filter((b) => b.isPopping());
   balls = tutorialManager.generateBalls(onTutorialPop, () => {});
-}
-
-function onTutorialComplete() {
-  resetGame();
 }
