@@ -22,11 +22,10 @@ export const makeLevelManager = (
   let hasCompletedInitialAdvance;
   let interstitialShowing;
   let interstitialStart;
-  let firstMissLevel;
-  let hasShownFirstMissMessage;
   let gameOver;
   let hasShownPreviewInitialMessage;
   let levelStarted;
+  let missedFirstBubble;
 
   const levelCountdownText = makeTextBlock(
     canvasManager,
@@ -72,10 +71,9 @@ export const makeLevelManager = (
     previousLevelValue = false;
     hasCompletedInitialAdvance = false;
     interstitialShowing = false;
-    firstMissLevel = false;
-    hasShownFirstMissMessage = false;
     gameOver = false;
     hasShownPreviewInitialMessage = false;
+    missedFirstBubble = false;
   };
   reset();
 
@@ -103,16 +101,13 @@ export const makeLevelManager = (
     // "Level 1". However on subsequent  interstitials we want to show the
     // completed level aka the previous level, and only transition the level
     // indicator once the player has advanced by hitting "Continue"
-    else if (hasCompletedInitialAdvance) {
+    else if (hasCompletedInitialAdvance && !missedFirstBubble) {
       previousLevelValue = level;
       level++;
       levelChangeStart = Date.now();
     } else {
       hasCompletedInitialAdvance = true;
-    }
-
-    if (firstMissLevel && !hasShownFirstMissMessage) {
-      hasShownFirstMissMessage = true;
+      missedFirstBubble = false;
     }
 
     levelCountdownText.updateLines([`Par of ${getLevelData().par}`]);
@@ -144,7 +139,7 @@ export const makeLevelManager = (
     reachedEndOfGameMessage,
     endGameMessage,
     initialMessage,
-    firstMissMessage,
+    retryFirstLevelMessage,
     defaultMessage,
   }) => {
     if (interstitialShowing) {
@@ -158,8 +153,8 @@ export const makeLevelManager = (
         reachedEndOfGameMessage(msElapsed);
       } else if (level === 1 && !hasCompletedInitialAdvance && !previewData) {
         initialMessage(msElapsed);
-      } else if (firstMissLevel && !hasShownFirstMissMessage && !previewData) {
-        firstMissMessage(msElapsed);
+      } else if (missedFirstBubble && !previewData) {
+        retryFirstLevelMessage(msElapsed);
       } else {
         defaultMessage(msElapsed);
       }
@@ -247,7 +242,7 @@ export const makeLevelManager = (
     drawLevelCountdown,
     showLevelInterstitial,
     dismissInterstitialAndAdvanceLevel,
-    setFirstMiss: () => (firstMissLevel = true),
+    setMissedFirstBubble: () => (missedFirstBubble = true),
     isLastLevel,
     onGameOver,
     isGameOver: () => gameOver,

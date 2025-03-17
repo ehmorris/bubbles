@@ -336,12 +336,10 @@ animate((deltaTime) => {
           },
           [`Preview of “${previewData.name}”`]
         ).draw(msElapsed);
-        interstitialButtonManager.draw(
-          deltaTime,
-          msElapsed,
-          80,
-          "Play Preview"
-        );
+        interstitialButtonManager.draw(deltaTime, msElapsed, {
+          delay: 80,
+          text: "Play Preview",
+        });
       },
       initialMessage: (msElapsed) => {
         makeTextBlock(
@@ -361,12 +359,20 @@ animate((deltaTime) => {
           text: "Play",
         });
       },
-      firstMissMessage: (msElapsed) => {
-        scoreDisplay.draw();
-        shareImageManager.draw();
+      retryFirstLevelMessage: (msElapsed) => {
+        makeTextBlock(
+          canvasManager,
+          {
+            xPos: canvasManager.getWidth() / 2,
+            yPos: canvasManager.getHeight() / 2,
+            textAlign: "center",
+            verticalAlign: "center",
+          },
+          ["Whoops, try to get", "that bubble"]
+        ).draw(msElapsed);
         interstitialButtonManager.draw(deltaTime, msElapsed, {
-          delay: 960,
-          isSharable: true,
+          delay: 80,
+          text: "Try Again",
         });
       },
       defaultMessage: (msElapsed) => {
@@ -468,11 +474,13 @@ function onMiss() {
     scoreStore.recordMiss();
     lifeManager.subtract();
     audioManager.playRandomFireworks();
-    levelManager.setFirstMiss();
 
     if (lifeManager.getLives() <= 0) {
       onGameEnd();
     } else if (balls.filter((b) => b.isRemaining()) <= 0) {
+      if (levelManager.getLevel() === 1) {
+        levelManager.setMissedFirstBubble();
+      }
       levelManager.showLevelInterstitial();
     }
   }
