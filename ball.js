@@ -204,17 +204,27 @@ export const makeBall = (
                   easeOutCubic
                 );
 
-          CTX.save();
-          CTX.translate(p.getPosition().x, p.getPosition().y);
-          CTX.scale(scale, scale);
-          CTX.drawImage(
-            preRenderImage,
-            -p.getRadius(),
-            -p.getRadius(),
-            p.getRadius() * 2,
-            p.getRadius() * 2
-          );
-          CTX.restore();
+          const { x, y } = p.getPosition();
+          const radius = p.getRadius();
+          if (
+            scale > 0 &&
+            x < canvasManager.getWidth() + radius &&
+            x > -radius &&
+            y < canvasManager.getHeight() + radius &&
+            y > -radius
+          ) {
+            CTX.save();
+            CTX.translate(p.getPosition().x, p.getPosition().y);
+            CTX.scale(scale, scale);
+            CTX.drawImage(
+              preRenderImage,
+              -p.getRadius(),
+              -p.getRadius(),
+              p.getRadius() * 2,
+              p.getRadius() * 2
+            );
+            CTX.restore();
+          }
         });
 
         sparks.forEach((s) => {
@@ -228,25 +238,39 @@ export const makeBall = (
             easeOutCubic
           );
 
-          CTX.save();
-          CTX.translate(s.getPosition().x, s.getPosition().y);
-          CTX.rotate(
-            getHeadingInRadsFromTwoPoints(
-              baseParticle.getPosition(),
-              s.getPosition()
-            )
-          );
-          CTX.fillStyle = "oklch(74.2% 0.2146 50.82)";
-          CTX.fillRect(0, 0, length, 1);
-          CTX.restore();
+          const { x, y } = s.getPosition();
+          if (
+            length > 0 &&
+            x < canvasManager.getWidth() + length &&
+            x > -length &&
+            y < canvasManager.getHeight() + length &&
+            y > -length
+          ) {
+            CTX.save();
+            CTX.translate(s.getPosition().x, s.getPosition().y);
+            CTX.rotate(
+              getHeadingInRadsFromTwoPoints(
+                baseParticle.getPosition(),
+                s.getPosition()
+              )
+            );
+            CTX.fillStyle = "oklch(74.2% 0.2146 50.82)";
+            CTX.fillRect(0, 0, length, 1);
+            CTX.restore();
+          }
         });
       }
     } else if (shouldRender()) {
       baseParticle.update(deltaTime);
-      CTX.save();
-      CTX.translate(baseParticle.getPosition().x, baseParticle.getPosition().y);
-      CTX.drawImage(preRenderImage, -radius, -radius, radius * 2, radius * 2);
-      CTX.restore();
+      if (baseParticle.getPosition().y > -baseParticle.getRadius()) {
+        CTX.save();
+        CTX.translate(
+          baseParticle.getPosition().x,
+          baseParticle.getPosition().y
+        );
+        CTX.drawImage(preRenderImage, -radius, -radius, radius * 2, radius * 2);
+        CTX.restore();
+      }
     }
   };
 
