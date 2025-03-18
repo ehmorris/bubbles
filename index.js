@@ -140,7 +140,10 @@ canvasManager.getElement().addEventListener("pointerdown", (e) => {
         tutorialManager,
         pointerId,
         { x, y },
-        findBallAtPoint(balls, { x, y }),
+        findBallAtPoint(
+          balls.filter((b) => b.inPlay() && b.inViewport()),
+          { x, y }
+        ),
         onPointerTrigger,
         handleGameClick
       )
@@ -234,7 +237,7 @@ const triggerTimedOutHoldBlasts = () => {
 const detectCollisionsForGameObjects = () => {
   // Run collision detection on bubbles and bounce bubbles off eachother
   // Run collision detection on blasts + slingshots and pop colliding bubbles
-  const ballsInPlay = balls.filter((b) => b.isRemaining() && b.shouldRender());
+  const ballsInPlay = balls.filter((b) => b.inPlay());
   ballsInPlay.forEach((ballA) => {
     ballsInPlay.forEach((ballB) => {
       if (ballA !== ballB) {
@@ -446,7 +449,10 @@ function handleGameClick(currentTapPosition, ballAtPointOfInitialTap) {
   // So that taps don't feel slow, and the game isn't frustrating, we detect
   // what ball the user would have popped on pointerdown as well as pointerup
   // and let them have the pop in either case.
-  const collisionOnPointerUp = findBallAtPoint(balls, currentTapPosition);
+  const collisionOnPointerUp = findBallAtPoint(
+    balls.filter((b) => b.inPlay() && b.inViewport()),
+    currentTapPosition
+  );
   const collidingBall = ballAtPointOfInitialTap || collisionOnPointerUp;
 
   if (collidingBall) {
@@ -465,7 +471,7 @@ function onPointerTrigger(output) {
 }
 
 function onPop() {
-  if (balls.filter((b) => b.isRemaining()) <= 0) {
+  if (balls.filter((b) => b.inPlay()) <= 0) {
     // Pause before showing interstitial so user can see the final bubble pop
     setTimeout(levelManager.showLevelInterstitial, 600);
   }
@@ -479,7 +485,7 @@ function onMiss() {
 
     if (lifeManager.getLives() <= 0) {
       onGameEnd();
-    } else if (balls.filter((b) => b.isRemaining()) <= 0) {
+    } else if (balls.filter((b) => b.inPlay()) <= 0) {
       if (levelManager.getLevel() === 1) {
         levelManager.setMissedFirstBubble();
       }
@@ -489,7 +495,7 @@ function onMiss() {
 }
 
 function onTutorialPop() {
-  if (balls.filter((b) => b.isRemaining()) <= 0) {
+  if (balls.filter((b) => b.inPlay()) <= 0) {
     tutorialManager.advance();
   }
 }

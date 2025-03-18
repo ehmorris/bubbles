@@ -46,16 +46,13 @@ export const getVelocityFromSpeedAndHeading = (speed, headingInRads) => ({
 
 export const getSpeedFromVelocity = ({ x, y }) => Math.sqrt(x * x + y * y);
 
-export const findBallAtPoint = (balls, { x, y }) => {
-  return balls.find((ball) => {
-    if (ball.isRemaining() && ball.shouldRender()) {
-      const dx = x - ball.getPosition().x;
-      const dy = y - ball.getPosition().y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      return distance < ball.getRadius();
-    }
+export const findBallAtPoint = (balls, { x, y }) =>
+  balls.find((ball) => {
+    const dx = x - ball.getPosition().x;
+    const dy = y - ball.getPosition().y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    return distance < ball.getRadius();
   });
-};
 
 export const getBoundedPosition = (canvasManager, { x, y }, padding = 16) => {
   const paddedBoundedX = Math.min(

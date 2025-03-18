@@ -45,7 +45,19 @@ export const makeBall = (
     onLeftTouch,
   });
 
-  const shouldRender = () => !missed && baseParticle.getDuration() > delay;
+  const inPlay = () => !popped && !missed && baseParticle.getDuration() > delay;
+
+  const inViewport = () => {
+    const { x, y } = baseParticle.getPosition();
+    const radius = baseParticle.getRadius();
+
+    return (
+      x < canvasManager.getWidth() + radius &&
+      x > -radius &&
+      y < canvasManager.getHeight() + radius &&
+      y > -radius
+    );
+  };
 
   function onRightTouch(position, velocity) {
     position.x = canvasManager.getWidth() - radius;
@@ -260,9 +272,10 @@ export const makeBall = (
           }
         });
       }
-    } else if (shouldRender()) {
+    } else if (inPlay()) {
       baseParticle.update(deltaTime);
-      if (baseParticle.getPosition().y > -baseParticle.getRadius()) {
+
+      if (inViewport()) {
         CTX.save();
         CTX.translate(
           baseParticle.getPosition().x,
@@ -284,8 +297,8 @@ export const makeBall = (
     draw,
     pop,
     isPopped: () => popped,
-    isRemaining: () => !popped && !missed,
-    shouldRender,
+    inPlay,
+    inViewport,
     isPopping: () =>
       popped && Date.now() - poppedTime <= popAnimationDurationMax,
   };
