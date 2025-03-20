@@ -31,10 +31,11 @@ export const makeLevelManager = (
     canvasManager,
     {
       xPos: canvasManager.getWidth() / 2,
-      yPos: canvasManager.getHeight() / 2 - circleRadius + 8,
+      yPos: canvasManager.getHeight() / 2 - circleRadius + 3,
       textAlign: "center",
       verticalAlign: "center",
       fontSize: 32,
+      lineHeight: 42,
     },
     [""]
   );
@@ -43,11 +44,12 @@ export const makeLevelManager = (
     canvasManager,
     {
       xPos: canvasManager.getWidth() / 2,
-      yPos: canvasManager.getHeight() / 2 + circleRadius - 34,
+      yPos: canvasManager.getHeight() / 2 + circleRadius - 27,
       textAlign: "center",
       verticalAlign: "center",
       fontWeight: FONT_WEIGHT_BOLD,
       fontSize: 14,
+      lineHeight: 22,
       fill: yellow,
       letterSpacing: "1px",
     },
@@ -62,6 +64,7 @@ export const makeLevelManager = (
       textAlign: "center",
       verticalAlign: "center",
       fontSize: 24,
+      lineHeight: 32,
     },
     [""]
   );
@@ -167,7 +170,7 @@ export const makeLevelManager = (
       Date.now() - levelStarted
     );
     const yPos = transition(
-      canvasManager.getHeight() / 2 - circleRadius - 14,
+      canvasManager.getHeight() / 2 - circleRadius - 13,
       24,
       showLargeDuringCountdown,
       easeOutExpo

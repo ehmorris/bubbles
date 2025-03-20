@@ -42,7 +42,7 @@ export const makeScoreDisplay = (
       yPos: verticalMarginBetweenSections,
       fontSize: 28,
       fontWeight: FONT_WEIGHT_BOLD,
-      lineHeight: 34,
+      lineHeight: 36,
     },
     []
   );
