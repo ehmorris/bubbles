@@ -129,14 +129,14 @@ export const makeScoreDisplay = (
     topText.updateLines(textLines);
   };
 
-  const draw = () => {
+  const draw = (deltaTime) => {
     CTX.save();
     // Darken screen so it looks different from normal interstitial
     if (levelManager.isGameOver() || levelManager.isLastLevel()) {
       CTX.fillStyle = "rgba(0, 0, 0, 0.6)";
       CTX.fillRect(0, 0, canvasManager.getWidth(), canvasManager.getHeight());
     }
-    topText.draw();
+    topText.draw(deltaTime);
     CTX.restore();
 
     CTX.save();

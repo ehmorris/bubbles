@@ -62,7 +62,7 @@ export const makeSpring = (
     });
   };
 
-  const resetValue = (v) => {
+  const resetValue = (v = initialValue) => {
     currentValue = v;
     endValue = v;
     velocity = 0;

@@ -120,7 +120,7 @@ export const makeTutorialManager = (
 
     // Tutorial step text and arrows
     // Ball data is passed via generateBalls() into index and drawn there
-    textManager.draw();
+    textManager.draw(deltaTime);
     if ("draw" in tutorialData[currentTutorialStepIndex]) {
       tutorialData[currentTutorialStepIndex].draw();
     }

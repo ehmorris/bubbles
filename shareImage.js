@@ -23,7 +23,7 @@ export const makeShareImageManager = (scoreStore, levelManager) => {
     shareImageScoreDisplay.update();
   };
 
-  const draw = () => {
+  const draw = (deltaTime) => {
     CTX.save();
     CTX.fillStyle = background;
     CTX.fillRect(
@@ -34,7 +34,7 @@ export const makeShareImageManager = (scoreStore, levelManager) => {
     );
     CTX.restore();
 
-    shareImageScoreDisplay.draw();
+    shareImageScoreDisplay.draw(deltaTime);
 
     if (
       shareImageCanvasManager.getHeight() !==

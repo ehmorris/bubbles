@@ -2,6 +2,7 @@ import { FONT, FONT_WEIGHT_NORMAL } from "./constants.js";
 import { white } from "./colors.js";
 import { clampedProgress, transition } from "./helpers.js";
 import { easeOutExpo } from "./easings.js";
+import { makeSpring } from "./spring.js";
 
 export const makeTextBlock = (
   canvasManager,
@@ -19,20 +20,33 @@ export const makeTextBlock = (
   initialLinesArray
 ) => {
   const CTX = canvasManager.getContext();
+  let textStart = Date.now();
   let linesArray = [...initialLinesArray];
   let verticalOffset =
     verticalAlign === "center" ? (linesArray.length / 2) * lineHeight : 0;
   let yPos = initialYPos;
-  let textStart = Date.now();
+
+  const positionSpring = makeSpring(lineHeight, {
+    stiffness: 120,
+    damping: 13,
+    mass: 1,
+    precision: 120,
+  });
+  positionSpring.setEndValue(0);
 
   const updateLines = (newLines) => {
     textStart = Date.now();
+    positionSpring.resetValue();
+    positionSpring.setEndValue(0);
+
     linesArray = [...newLines];
     verticalOffset =
       verticalAlign === "center" ? (linesArray.length / 2) * lineHeight : 0;
   };
 
   const updateYPos = (newYPos) => (yPos = newYPos);
+
+  const hide = () => positionSpring.setEndValue(-lineHeight);
 
   const getBoundingBox = () => {
     const leading = lineHeight - fontSize;
@@ -43,39 +57,37 @@ export const makeTextBlock = (
     };
   };
 
-  const draw = (passedMSElapsed = false) => {
-    CTX.save();
-    CTX.font = `${fontWeight} ${fontSize}px ${FONT}`;
-    CTX.fillStyle = fill;
-    CTX.textAlign = textAlign;
-    CTX.letterSpacing = letterSpacing;
-    CTX.translate(xPos, yPos - verticalOffset);
-    linesArray.forEach((line, index) => {
-      const lineYPos = (index + 1) * lineHeight;
-      const textSlideUpPosition = transition(
-        lineYPos + lineHeight,
-        lineYPos,
-        clampedProgress(0, 816, passedMSElapsed || Date.now() - textStart),
-        easeOutExpo
-      );
+  const draw = (deltaTime, delay = 0) => {
+    if (Date.now() - textStart > delay) {
+      positionSpring.update(deltaTime);
 
       CTX.save();
+      CTX.font = `${fontWeight} ${fontSize}px ${FONT}`;
+      CTX.fillStyle = fill;
+      CTX.textAlign = textAlign;
+      CTX.letterSpacing = letterSpacing;
+      CTX.translate(xPos, yPos - verticalOffset);
+      linesArray.forEach((line, index) => {
+        const lineYPos = (index + 1) * lineHeight;
 
-      // Draw clipping mask
-      CTX.beginPath();
-      CTX.rect(
-        -xPos,
-        lineYPos - fontSize,
-        canvasManager.getWidth(),
-        lineHeight
-      );
-      CTX.clip();
+        CTX.save();
 
-      // Move text up into non clipped area
-      CTX.fillText(line, 0, textSlideUpPosition);
+        // Draw clipping mask
+        CTX.beginPath();
+        CTX.rect(
+          -xPos,
+          lineYPos - fontSize,
+          canvasManager.getWidth(),
+          lineHeight
+        );
+        CTX.clip();
+
+        // Move text up into non clipped area
+        CTX.fillText(line, 0, lineYPos + positionSpring.getCurrentValue());
+        CTX.restore();
+      });
       CTX.restore();
-    });
-    CTX.restore();
+    }
   };
 
   return {
@@ -85,5 +97,6 @@ export const makeTextBlock = (
     getLines: () => linesArray,
     updateLines,
     updateYPos,
+    hide,
   };
 };

@@ -5,6 +5,8 @@ import { drawTextRotate } from "./textRotate.js";
 import { clampedProgress, transition } from "./helpers.js";
 import { makeTextBlock } from "./textBlock.js";
 import { easeOutExpo } from "./easings.js";
+import { makeScoreDisplay } from "./scoreDisplay.js";
+import { makeSpring } from "./spring.js";
 
 export const makeLevelManager = (
   canvasManager,
@@ -69,6 +71,13 @@ export const makeLevelManager = (
     [""]
   );
 
+  const levelNumberSpringPosition = makeSpring(24, {
+    stiffness: 150,
+    damping: 15,
+    mass: 1,
+    precision: 120,
+  });
+
   const reset = () => {
     level = previewData ? previewData.name : 1;
     previousLevelValue = false;
@@ -91,8 +100,7 @@ export const makeLevelManager = (
     onInterstitial(interstitialStart);
   };
 
-  const showLevelCountdown = () =>
-    Date.now() - levelStarted < countdownDuration;
+  const levelCountingDown = () => Date.now() - levelStarted < countdownDuration;
 
   const dismissInterstitialAndAdvanceLevel = () => {
     if (previewData) {
@@ -125,6 +133,9 @@ export const makeLevelManager = (
     interstitialShowing = false;
     interstitialStart = false;
     levelStarted = Date.now();
+    levelNumberSpringPosition.setEndValue(
+      canvasManager.getHeight() / 2 - circleRadius - 13
+    );
 
     onAdvance();
   };
@@ -164,24 +175,15 @@ export const makeLevelManager = (
   };
 
   const drawLevelNumber = () => {
-    const showLargeDuringCountdown = clampedProgress(
-      countdownDuration,
-      countdownDuration + 544,
-      Date.now() - levelStarted
-    );
-    const yPos = transition(
-      canvasManager.getHeight() / 2 - circleRadius - 13,
-      24,
-      showLargeDuringCountdown,
-      easeOutExpo
-    );
-
     CTX.save();
     CTX.font = `${FONT_WEIGHT_BOLD} 14px ${FONT}`;
     CTX.fillStyle = yellow;
     CTX.letterSpacing = "1px";
     CTX.textAlign = "center";
-    CTX.translate(canvasManager.getWidth() / 2, yPos);
+    CTX.translate(
+      canvasManager.getWidth() / 2,
+      levelNumberSpringPosition.getCurrentValue()
+    );
 
     if (!previewData && previousLevelValue) {
       drawTextRotate(
@@ -197,39 +199,49 @@ export const makeLevelManager = (
     CTX.restore();
   };
 
-  const drawLevelCountdown = () => {
+  const drawLevelCountdown = (deltaTime) => {
     const timeRemaining = countdownDuration - (Date.now() - levelStarted);
+    levelNumberSpringPosition.update(deltaTime);
 
-    levelCountdownText.draw();
-
-    if (level > 1) {
-      overallParLabel.draw();
-      overallParText.draw();
+    if (timeRemaining < 0) {
+      levelCountdownText.hide();
+      overallParLabel.hide();
+      overallParText.hide();
+      levelNumberSpringPosition.setEndValue(24);
     }
 
-    CTX.save();
-    CTX.translate(
-      canvasManager.getWidth() / 2,
-      canvasManager.getHeight() / 2 - circleRadius
-    );
-    CTX.lineWidth = timeRemaining / 400;
-    CTX.strokeStyle = white;
-    CTX.rotate(-Math.PI / 2);
-    CTX.beginPath();
-    CTX.arc(
-      0,
-      0,
-      circleRadius,
-      0,
-      transition(
+    levelCountdownText.draw(deltaTime);
+
+    if (level > 1) {
+      overallParLabel.draw(deltaTime, 120);
+      overallParText.draw(deltaTime, 150);
+    }
+
+    if (timeRemaining > 0) {
+      CTX.save();
+      CTX.translate(
+        canvasManager.getWidth() / 2,
+        canvasManager.getHeight() / 2 - circleRadius
+      );
+      CTX.lineWidth = timeRemaining / 400;
+      CTX.strokeStyle = white;
+      CTX.rotate(-Math.PI / 2);
+      CTX.beginPath();
+      CTX.arc(
         0,
-        2 * Math.PI,
-        clampedProgress(countdownDuration, 0, timeRemaining)
-      ),
-      true
-    );
-    CTX.stroke();
-    CTX.restore();
+        0,
+        circleRadius,
+        0,
+        transition(
+          0,
+          2 * Math.PI,
+          clampedProgress(countdownDuration, 0, timeRemaining)
+        ),
+        true
+      );
+      CTX.stroke();
+      CTX.restore();
+    }
   };
 
   return {
@@ -240,7 +252,7 @@ export const makeLevelManager = (
     drawInterstitialMessage,
     isInterstitialShowing: () => interstitialShowing,
     drawLevelNumber,
-    showLevelCountdown,
+    levelCountingDown,
     drawLevelCountdown,
     showLevelInterstitial,
     dismissInterstitialAndAdvanceLevel,

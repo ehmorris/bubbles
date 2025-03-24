@@ -65,6 +65,17 @@ const levelManager = makeLevelManager(
 const scoreStore = makeScoreStore(levelManager);
 const scoreDisplay = makeScoreDisplay(canvasManager, scoreStore, levelManager);
 const interstitialButtonManager = makeInterstitialButtonManager(canvasManager);
+const interstitialText = makeTextBlock(
+  canvasManager,
+  {
+    xPos: canvasManager.getWidth() / 2,
+    yPos: canvasManager.getHeight() / 2,
+    textAlign: "center",
+    verticalAlign: "center",
+  },
+  []
+);
+
 const tutorialManager = makeTutorialManager(
   canvasManager,
   onTutorialStart,
@@ -331,66 +342,54 @@ animate((deltaTime) => {
     // Draw text elements (level, life, interstitial) underneath bubbles
     levelManager.drawInterstitialMessage({
       previewInitialMessage: (msElapsed) => {
-        makeTextBlock(
-          canvasManager,
-          {
-            xPos: canvasManager.getWidth() / 2,
-            yPos: canvasManager.getHeight() / 2,
-            textAlign: "center",
-            verticalAlign: "center",
-          },
-          [`Preview of “${previewData.name}”`]
-        ).draw(msElapsed);
+        const text = `Preview of “${previewData.name}”`;
+        if (interstitialText.getLines()[0] !== text)
+          interstitialText.updateLines([text]);
+
+        interstitialText.draw(deltaTime);
+
         interstitialButtonManager.draw(deltaTime, msElapsed, {
           delay: 80,
           text: "Play Preview",
         });
       },
       initialMessage: (msElapsed) => {
-        makeTextBlock(
-          canvasManager,
-          {
-            xPos: canvasManager.getWidth() / 2,
-            yPos: canvasManager.getHeight() / 2,
-            textAlign: "center",
-            verticalAlign: "center",
-          },
-          tutorialManager.isTutorialCompletedThisSession()
-            ? ["Bubbles fall from the top"]
-            : ["Pop the bubble"]
-        ).draw(msElapsed);
+        const text = tutorialManager.isTutorialCompletedThisSession()
+          ? "Bubbles fall from the top"
+          : "Pop the bubble";
+        if (interstitialText.getLines()[0] !== text)
+          interstitialText.updateLines([text]);
+
+        interstitialText.draw(deltaTime);
+
         interstitialButtonManager.draw(deltaTime, msElapsed, {
           delay: 80,
           text: "Play",
         });
       },
       retryFirstLevelMessage: (msElapsed) => {
-        makeTextBlock(
-          canvasManager,
-          {
-            xPos: canvasManager.getWidth() / 2,
-            yPos: canvasManager.getHeight() / 2,
-            textAlign: "center",
-            verticalAlign: "center",
-          },
-          ["Whoops, try to get", "that bubble"]
-        ).draw(msElapsed);
+        const textArray = ["Whoops, try to get", "that bubble"];
+        if (interstitialText.getLines()[0] !== textArray[0])
+          interstitialText.updateLines(textArray);
+
+        interstitialText.draw(deltaTime);
+
         interstitialButtonManager.draw(deltaTime, msElapsed, {
           delay: 80,
           text: "Try Again",
         });
       },
       defaultMessage: (msElapsed) => {
-        scoreDisplay.draw();
-        shareImageManager.draw();
+        scoreDisplay.draw(deltaTime);
+        shareImageManager.draw(deltaTime);
         interstitialButtonManager.draw(deltaTime, msElapsed, {
           delay: 960,
           isSharable: true,
         });
       },
       endGameMessage: (msElapsed) => {
-        scoreDisplay.draw();
-        shareImageManager.draw();
+        scoreDisplay.draw(deltaTime);
+        shareImageManager.draw(deltaTime);
         interstitialButtonManager.draw(deltaTime, msElapsed, {
           delay: 1920,
           text: "Try Again",
@@ -398,8 +397,8 @@ animate((deltaTime) => {
         });
       },
       reachedEndOfGameMessage: (msElapsed) => {
-        scoreDisplay.draw();
-        shareImageManager.draw();
+        scoreDisplay.draw(deltaTime);
+        shareImageManager.draw(deltaTime);
         interstitialButtonManager.draw(deltaTime, msElapsed, {
           delay: 1920,
           text: "Play Again",
@@ -415,7 +414,7 @@ animate((deltaTime) => {
         lifeManager.draw();
       }
     } else {
-      tutorialManager.draw();
+      tutorialManager.draw(deltaTime);
     }
 
     // Draw main game elements
@@ -423,9 +422,8 @@ animate((deltaTime) => {
     previousLevelBalls.forEach((b) => b.draw(deltaTime));
     fireworks.forEach((f) => f.draw(deltaTime));
 
-    if (levelManager.showLevelCountdown()) {
-      levelManager.drawLevelCountdown();
-    } else {
+    levelManager.drawLevelCountdown(deltaTime);
+    if (!levelManager.levelCountingDown()) {
       balls.forEach((b) => b.draw(deltaTime));
     }
 
