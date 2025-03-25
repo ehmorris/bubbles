@@ -100,7 +100,7 @@ export const makeTutorialManager = (
         )
     );
 
-  const draw = () => {
+  const draw = (deltaTime) => {
     if (
       "timeout" in tutorialData[currentTutorialStepIndex] &&
       Date.now() - stepStarted > tutorialData[currentTutorialStepIndex].timeout
