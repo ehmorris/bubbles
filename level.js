@@ -133,7 +133,7 @@ export const makeLevelManager = (
     interstitialShowing = false;
     interstitialStart = false;
     levelStarted = Date.now();
-    levelNumberSpringPosition.setEndValue(
+    levelNumberSpringPosition.resetValue(
       canvasManager.getHeight() / 2 - circleRadius - 13
     );
 
