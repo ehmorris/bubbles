@@ -26,8 +26,6 @@ export const makeTextBlock = (
     verticalAlign === "center" ? (linesArray.length / 2) * lineHeight : 0;
   let yPos = initialYPos;
 
-  // Positions derived from the canvas size are passed as functions so they
-  // stay correct after a resize or an orientation change
   const resolvePosition = (position) =>
     typeof position === "function" ? position() : position;
   const getXPos = () => resolvePosition(xPos);

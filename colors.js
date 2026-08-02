@@ -112,7 +112,5 @@ export const randomColor = () => {
 export const getGradientBitmap = (sourceColor) => {
   const gradient = gradientBitmaps.find((g) => g.sourceColor === sourceColor);
 
-  // Level data can arrive from a URL, so the color isn't guaranteed to be one
-  // we've pre-rendered a bubble for
   return gradient ? gradient.bitmap : whiteGradientBitmap;
 };

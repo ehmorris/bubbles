@@ -11,9 +11,6 @@ export const makeCanvasManager = ({
     colorSpace: "display-p3",
   });
   const resizeSubscribers = [];
-  // Re-read on every resize rather than captured once: browser zoom and moving
-  // a window between monitors change it, and a stale value leaves the backing
-  // store at the wrong resolution
   let scale = window.devicePixelRatio;
 
   const setCanvasSize = () => {
@@ -22,8 +19,6 @@ export const makeCanvasManager = ({
     element.style.height = height + "px";
     element.width = Math.floor(width * scale);
     element.height = Math.floor(height * scale);
-    // Assigning width or height resets the transform, but say so explicitly
-    // rather than depending on it
     context.setTransform(1, 0, 0, 1, 0, 0);
     context.scale(scale, scale);
   };
@@ -45,7 +40,6 @@ export const makeCanvasManager = ({
     getWidth: () => width,
     getHeight: () => height,
     getScaleFactor: () => scale,
-    // For anything that caches a measurement taken from the canvas size
     onResize: (subscriber) => resizeSubscribers.push(subscriber),
   };
 };

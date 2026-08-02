@@ -91,11 +91,6 @@ export const makeSlingshot = (
     startPosition: { ...endPosition },
     startVelocity,
     gravity: GRAVITY,
-    // particle.update caps how far a particle moves down each frame but never
-    // caps how far it moves sideways, so a fast downward shot crawls down while
-    // still racing across — a slingshot aimed 45° down-left left at nearly 15°
-    // once pulled far enough. Its speed is already set at launch, so don't cap
-    // it. Pop pieces and sparks opt out the same way.
     terminalVelocity: Infinity,
     onRightPassed: onLeaveScreen,
     onBottomPassed: onLeaveScreen,

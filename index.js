@@ -28,8 +28,6 @@ import { makeTutorialManager } from "./tutorial.js";
 import { makeFirework } from "./firework.js";
 import { makeShareImageManager } from "./shareImage.js";
 
-// Anyone can put anything after ?level=, and this runs at import time, so a
-// malformed payload would otherwise take the whole game down with it
 function parsePreviewData(encodedLevel) {
   if (!encodedLevel) return false;
 
@@ -143,10 +141,6 @@ function resetOngoingVisuals() {
   ripples = [];
 }
 
-// The last level and the missed-first-bubble screen both offer a restart
-// rather than a next level, so every way of dismissing an interstitial has to
-// route through here. Advancing off the last level walks past the end of the
-// level data.
 function advanceFromInterstitial() {
   levelManager.isGameOver() ||
   levelManager.isLastLevel() ||
@@ -165,11 +159,6 @@ canvasManager.getElement().addEventListener("pointerdown", (e) => {
       shareImageManager.share
     );
   } else {
-    // Capture the pointer so a drag that ends outside the canvas still
-    // delivers pointerup here. Without it the pointer is never removed and its
-    // slingshot preview stays on screen. This throws if the pointer is already
-    // gone by the time the queued event is handled, which is harmless — but it
-    // must not stop the gesture below from being registered.
     try {
       canvasManager.getElement().setPointerCapture(pointerId);
     } catch (e) {}
@@ -213,9 +202,6 @@ canvasManager.getElement().addEventListener("pointerup", (e) => {
   e.preventDefault();
 });
 
-// The browser can take a pointer away mid-gesture, e.g. a system swipe or a
-// touch it decides belongs to something else. Drop it rather than leaving it
-// active and drawing forever.
 canvasManager.getElement().addEventListener("pointercancel", (e) => {
   activePointers = activePointers.filter(
     (pointer) => e.pointerId !== pointer.getId()
@@ -238,8 +224,6 @@ canvasManager.getElement().addEventListener("pointermove", (e) => {
 document.addEventListener("keydown", ({ key }) => {
   const validKey = key === " " || key === "Enter";
 
-  // Gated on the button's own delay so the keyboard can't skip an interstitial
-  // before its button is live
   if (
     validKey &&
     levelManager.isInterstitialShowing() &&
@@ -303,8 +287,6 @@ const detectCollisionsForGameObjects = () => {
   const outputsInPlay = pointerTriggerOutput.filter((p) => !p.isGone());
 
   ballsInPlay.forEach((ballA, indexA) => {
-    // Start past ballA so each pair is handled once per frame. Running both
-    // (A, B) and (B, A) applied the positional correction twice.
     for (let indexB = indexA + 1; indexB < ballsInPlay.length; indexB++) {
       const ballB = ballsInPlay[indexB];
       const collision = checkParticleCollision(ballA, ballB);
@@ -314,13 +296,8 @@ const detectCollisionsForGameObjects = () => {
       }
     }
 
-    // Bubbles wait above the top of the screen before a level starts, and a
-    // maxed blast reaches a radius of 280 — far enough to pop the first queued
-    // row at y -180, which the player can't see yet
     if (ballA.inViewport()) {
       outputsInPlay.forEach((output) => {
-        // Once popped, a bubble shouldn't also credit the next output that
-        // happens to overlap it this frame with a combo
         if (ballA.isPopped()) return;
 
         const collision = checkParticleCollision(ballA, output);
@@ -513,8 +490,6 @@ function handleGameClick(currentTapPosition, ballAtPointOfInitialTap) {
     balls.filter((b) => b.inPlay() && b.inViewport()),
     currentTapPosition
   );
-  // The bubble found on pointerdown may have been popped by a blast in the
-  // meantime, in which case tapping it shouldn't count as popping it again
   const collidingBall =
     ballAtPointOfInitialTap && ballAtPointOfInitialTap.inPlay()
       ? ballAtPointOfInitialTap
@@ -537,9 +512,7 @@ function onPointerTrigger(output) {
 
 function onPop() {
   if (balls.filter((b) => b.inPlay()).length === 0) {
-    // Pause before showing interstitial so user can see the final bubble pop.
-    // Tracked so that losing the last life inside this window doesn't let a
-    // stale timer restart the game over screen behind the player.
+    // Pause before showing interstitial so user can see the final bubble pop
     clearTimeout(showInterstitialTimeout);
     showInterstitialTimeout = setTimeout(
       levelManager.showLevelInterstitial,

@@ -27,9 +27,6 @@ export const makeTutorialManager = (
     },
     []
   );
-  // Passed as a getter: the data is built once, so a captured stepStarted
-  // stayed at the construction time and later steps' arrows skipped their
-  // animation entirely
   const tutorialData = makeTutorialData(
     canvasManager,
     textManager,
