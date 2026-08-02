@@ -158,8 +158,6 @@ export const makeScoreStore = (levelManager) => {
       { timestamp: Date.now(), level: levelManager.getLevel(), popped: 0 },
     ]);
 
-  const hasPoppedKey = (name) => store.get(name).some((o) => "popped" in o);
-
   const sumCategoryLevelEvents = (category, passedLevel = null) => {
     let filteredEvents;
 
@@ -171,16 +169,14 @@ export const makeScoreStore = (levelManager) => {
       filteredEvents = store.get(category);
     }
 
-    return hasPoppedKey(category)
-      ? {
-          data: filteredEvents,
-          num: filteredEvents.length,
-          numPopped: filteredEvents.reduce(
-            (acc, { popped }) => acc + popped,
-            0
-          ),
-        }
-      : { num: filteredEvents.length };
+    // Every recorded event stores a `popped` key, including missed bubbles,
+    // which store 0. An empty category therefore sums to 0 rather than
+    // omitting numPopped entirely.
+    return {
+      data: filteredEvents,
+      num: filteredEvents.length,
+      numPopped: filteredEvents.reduce((acc, { popped }) => acc + popped, 0),
+    };
   };
 
   const sumPopped = (passedLevel = null) => {
@@ -214,14 +210,18 @@ export const makeScoreStore = (levelManager) => {
     return numMoves - levelManager.getLevelData().par;
   };
 
-  const overallScoreNumber = (currentLevelPlayed = false) => {
+  // `currentLevelPlayed` has no default on purpose: leaving it off silently
+  // gave the end-of-game screens the countdown behavior, which dropped the
+  // final level from the score. Every caller has to say which it wants.
+  const overallScoreNumber = (currentLevelPlayed) => {
     // For the level countdown we want to display the overall par before the
     // current level is played e.g. on level 3, we want to display the score of
     // level 1 + level 2.
     //
     // For the end-of-game screen we want to display the overall par after the
     // current level has been played e.g. after level 3, we want to display the
-    // score of level 1 + level 2 + level 3.
+    // score of level 1 + level 2 + level 3. A level ended by a game over was
+    // not completed, so it passes false and contributes neither moves nor par.
     const maxLevelReached = currentLevelPlayed
       ? levelManager.getLevel()
       : levelManager.getLevel() - 1;
