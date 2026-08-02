@@ -67,7 +67,7 @@ export const makeShareImageManager = (scoreStore, levelManager) => {
 
   const share = () => {
     const stats = {
-      score: scoreStore.overallScoreNumber(),
+      score: scoreStore.overallScoreNumber(!levelManager.isGameOver()),
       taps: scoreStore.getTaps(),
       tapsPopped: scoreStore.sumCategoryLevelEvents("taps").numPopped,
       slingshots: scoreStore.getSlingshots(),
