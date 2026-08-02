@@ -420,7 +420,7 @@ animate((deltaTime) => {
       },
       defaultMessage: (msElapsed) => {
         scoreDisplay.draw(deltaTime);
-        shareImageManager.draw(deltaTime);
+        shareImageManager.draw(deltaTime, msElapsed);
         interstitialButtonManager.draw(deltaTime, msElapsed, {
           delay: 960,
           isSharable: true,
@@ -428,7 +428,7 @@ animate((deltaTime) => {
       },
       endGameMessage: (msElapsed) => {
         scoreDisplay.draw(deltaTime);
-        shareImageManager.draw(deltaTime);
+        shareImageManager.draw(deltaTime, msElapsed);
         interstitialButtonManager.draw(deltaTime, msElapsed, {
           delay: 1920,
           text: "Try Again",
@@ -437,7 +437,7 @@ animate((deltaTime) => {
       },
       reachedEndOfGameMessage: (msElapsed) => {
         scoreDisplay.draw(deltaTime);
-        shareImageManager.draw(deltaTime);
+        shareImageManager.draw(deltaTime, msElapsed);
         interstitialButtonManager.draw(deltaTime, msElapsed, {
           delay: 1920,
           text: "Play Again",
