@@ -167,8 +167,12 @@ canvasManager.getElement().addEventListener("pointerdown", (e) => {
   } else {
     // Capture the pointer so a drag that ends outside the canvas still
     // delivers pointerup here. Without it the pointer is never removed and its
-    // slingshot preview stays on screen.
-    canvasManager.getElement().setPointerCapture(pointerId);
+    // slingshot preview stays on screen. This throws if the pointer is already
+    // gone by the time the queued event is handled, which is harmless — but it
+    // must not stop the gesture below from being registered.
+    try {
+      canvasManager.getElement().setPointerCapture(pointerId);
+    } catch (e) {}
 
     activePointers.push(
       makeActivePointer(
