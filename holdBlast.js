@@ -71,7 +71,7 @@ export const makeHoldBlast = (
   );
   let gone = false;
   let numCollisions = 0;
-  let comboTrackerTimestamp = scoreStore.recordBlast(
+  let comboTrackerId = scoreStore.recordBlast(
     { x, y },
     startSize,
     numCollisions
@@ -79,7 +79,7 @@ export const makeHoldBlast = (
 
   const logCollision = () => {
     numCollisions++;
-    scoreStore.updateBlast(comboTrackerTimestamp, numCollisions);
+    scoreStore.updateBlast(comboTrackerId, numCollisions);
   };
 
   const getBlastProgress = () =>
