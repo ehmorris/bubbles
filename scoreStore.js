@@ -85,6 +85,10 @@ export const makeScoreStore = (levelManager) => {
       .get("slingshots")
       .findIndex((i) => i.timestamp === timestamp);
 
+    // A projectile can outlive the store that recorded it — resetting the score
+    // store doesn't clear projectiles still in flight
+    if (slingshotIndex === -1) return;
+
     const slingshotsCopy = [...store.get("slingshots")];
 
     slingshotsCopy[slingshotIndex].popped = popped;
@@ -129,6 +133,8 @@ export const makeScoreStore = (levelManager) => {
     const blastIndex = store
       .get("blasts")
       .findIndex((i) => i.timestamp === timestamp);
+
+    if (blastIndex === -1) return;
 
     const blastsCopy = [...store.get("blasts")];
 

@@ -284,19 +284,29 @@ const detectCollisionsForGameObjects = () => {
   // Run collision detection on bubbles and bounce bubbles off eachother
   // Run collision detection on blasts + slingshots and pop colliding bubbles
   const ballsInPlay = balls.filter((b) => b.inPlay());
-  ballsInPlay.forEach((ballA) => {
-    ballsInPlay.forEach((ballB) => {
-      if (ballA !== ballB) {
-        const collision = checkParticleCollision(ballA, ballB);
-        if (collision[0]) {
-          adjustParticlePositions(ballA, ballB, collision[1]);
-          resolveParticleCollision(ballA, ballB);
-        }
+  const outputsInPlay = pointerTriggerOutput.filter((p) => !p.isGone());
+
+  ballsInPlay.forEach((ballA, indexA) => {
+    // Start past ballA so each pair is handled once per frame. Running both
+    // (A, B) and (B, A) applied the positional correction twice.
+    for (let indexB = indexA + 1; indexB < ballsInPlay.length; indexB++) {
+      const ballB = ballsInPlay[indexB];
+      const collision = checkParticleCollision(ballA, ballB);
+      if (collision[0]) {
+        adjustParticlePositions(ballA, ballB, collision[1]);
+        resolveParticleCollision(ballA, ballB);
       }
-    });
-    pointerTriggerOutput
-      .filter((p) => !p.isGone())
-      .forEach((output) => {
+    }
+
+    // Bubbles wait above the top of the screen before a level starts, and a
+    // maxed blast reaches a radius of 280 — far enough to pop the first queued
+    // row at y -180, which the player can't see yet
+    if (ballA.inViewport()) {
+      outputsInPlay.forEach((output) => {
+        // Once popped, a bubble shouldn't also credit the next output that
+        // happens to overlap it this frame with a combo
+        if (ballA.isPopped()) return;
+
         const collision = checkParticleCollision(ballA, output);
         if (collision[0]) {
           output.isHoldBlast()
@@ -308,6 +318,7 @@ const detectCollisionsForGameObjects = () => {
           audioManager.playSequentialPluck();
         }
       });
+    }
   });
 };
 
@@ -486,7 +497,12 @@ function handleGameClick(currentTapPosition, ballAtPointOfInitialTap) {
     balls.filter((b) => b.inPlay() && b.inViewport()),
     currentTapPosition
   );
-  const collidingBall = ballAtPointOfInitialTap || collisionOnPointerUp;
+  // The bubble found on pointerdown may have been popped by a blast in the
+  // meantime, in which case tapping it shouldn't count as popping it again
+  const collidingBall =
+    ballAtPointOfInitialTap && ballAtPointOfInitialTap.inPlay()
+      ? ballAtPointOfInitialTap
+      : collisionOnPointerUp;
 
   if (collidingBall) {
     scoreStore.recordTap(currentTapPosition, 1, collidingBall.getFill());
