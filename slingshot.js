@@ -102,7 +102,7 @@ export const makeSlingshot = (
     onTopPassed: onLeaveScreen,
   });
 
-  let comboTrackerTimestamp = scoreStore.recordSlingshot(
+  let comboTrackerId = scoreStore.recordSlingshot(
     baseParticle.getPosition(),
     startVelocity,
     numCollisions
@@ -114,7 +114,7 @@ export const makeSlingshot = (
 
   const logCollision = () => {
     numCollisions++;
-    scoreStore.updateSlingshot(comboTrackerTimestamp, numCollisions);
+    scoreStore.updateSlingshot(comboTrackerId, numCollisions);
   };
 
   const draw = (deltaTime) => {

@@ -17,15 +17,15 @@ export const makeScoreStore = (levelManager) => {
   //   [
   //     "slingshots",
   //     [
-  //       { timestamp: 1234, level: 1, position: { x: 42, y: 56 }, velocity: { x: 0, y: 0 }, popped: 3, spring: [object], hasShownCombo: false },
-  //       { timestamp: 1234, level: 1, position: { x: 42, y: 56 }, velocity: { x: 0, y: 0 }, popped: 2, spring: [object], hasShownCombo: false }
+  //       { id: 0, timestamp: 1234, level: 1, position: { x: 42, y: 56 }, velocity: { x: 0, y: 0 }, popped: 3, spring: [object], hasShownCombo: false },
+  //       { id: 1, timestamp: 1234, level: 1, position: { x: 42, y: 56 }, velocity: { x: 0, y: 0 }, popped: 2, spring: [object], hasShownCombo: false }
   //     ],
   //   ],
   //   [
   //     "blasts",
   //     [
-  //       { timestamp: 1234, level: 1, position: { x: 42, y: 56 }, power: 123, popped: 2 },
-  //       { timestamp: 1234, level: 1, position: { x: 42, y: 56 }, power: 123, popped: 3 }
+  //       { id: 2, timestamp: 1234, level: 1, position: { x: 42, y: 56 }, power: 123, popped: 2 },
+  //       { id: 3, timestamp: 1234, level: 1, position: { x: 42, y: 56 }, power: 123, popped: 3 }
   //     ],
   //   ],
   //   [
@@ -39,6 +39,11 @@ export const makeScoreStore = (levelManager) => {
   // ]);
 
   let store;
+  // Projectiles are looked up by this when their pop count is updated. It used
+  // to be the timestamp, which two projectiles released in the same
+  // millisecond -- two fingers, or two blasts timing out on the same frame --
+  // share, so one collected the other's combos.
+  let nextEventId = 0;
 
   const reset = () =>
     (store = new Map([
@@ -63,12 +68,13 @@ export const makeScoreStore = (levelManager) => {
   };
 
   const recordSlingshot = (position, velocity, popped) => {
-    const timestamp = Date.now();
+    const id = nextEventId++;
 
     store.set("slingshots", [
       ...store.get("slingshots"),
       {
-        timestamp,
+        id,
+        timestamp: Date.now(),
         level: levelManager.getLevel(),
         position: { ...position },
         velocity: { ...velocity },
@@ -77,13 +83,13 @@ export const makeScoreStore = (levelManager) => {
       },
     ]);
 
-    return timestamp;
+    return id;
   };
 
-  const updateSlingshot = (timestamp, popped) => {
+  const updateSlingshot = (id, popped) => {
     const slingshotIndex = store
       .get("slingshots")
-      .findIndex((i) => i.timestamp === timestamp);
+      .findIndex((i) => i.id === id);
 
     // A projectile can outlive the store that recorded it — resetting the score
     // store doesn't clear projectiles still in flight
@@ -112,12 +118,13 @@ export const makeScoreStore = (levelManager) => {
   };
 
   const recordBlast = (position, power, popped) => {
-    const timestamp = Date.now();
+    const id = nextEventId++;
 
     store.set("blasts", [
       ...store.get("blasts"),
       {
-        timestamp,
+        id,
+        timestamp: Date.now(),
         level: levelManager.getLevel(),
         position,
         power,
@@ -126,13 +133,11 @@ export const makeScoreStore = (levelManager) => {
       },
     ]);
 
-    return timestamp;
+    return id;
   };
 
-  const updateBlast = (timestamp, popped) => {
-    const blastIndex = store
-      .get("blasts")
-      .findIndex((i) => i.timestamp === timestamp);
+  const updateBlast = (id, popped) => {
+    const blastIndex = store.get("blasts").findIndex((i) => i.id === id);
 
     if (blastIndex === -1) return;
 
