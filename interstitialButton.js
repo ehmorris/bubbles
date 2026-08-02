@@ -218,6 +218,7 @@ export const makeInterstitialButtonManager = (canvasManager) => {
     draw,
     handleClick,
     handleHover,
+    hasDelayPassed: () => !!delayHasPassed,
   };
 };
 

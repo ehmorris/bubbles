@@ -94,8 +94,10 @@ let previousLevelBalls;
 let balls;
 let ripples;
 let fireworks;
+let showInterstitialTimeout;
 
 function resetGame() {
+  clearTimeout(showInterstitialTimeout);
   activePointers = [];
   pointerTriggerOutput = [];
   previousLevelBalls = [];
@@ -129,20 +131,33 @@ function resetOngoingVisuals() {
   ripples = [];
 }
 
+// The last level and the missed-first-bubble screen both offer a restart
+// rather than a next level, so every way of dismissing an interstitial has to
+// route through here. Advancing off the last level walks past the end of the
+// level data.
+function advanceFromInterstitial() {
+  levelManager.isGameOver() ||
+  levelManager.isLastLevel() ||
+  levelManager.missedFirstBubble()
+    ? resetGame()
+    : levelManager.dismissInterstitialAndAdvanceLevel();
+}
+
 canvasManager.getElement().addEventListener("pointerdown", (e) => {
   const { pointerId, offsetX: x, offsetY: y } = e;
 
   if (levelManager.isInterstitialShowing()) {
     interstitialButtonManager.handleClick(
       { x, y },
-      levelManager.isGameOver() ||
-        levelManager.isLastLevel() ||
-        levelManager.missedFirstBubble()
-        ? resetGame
-        : levelManager.dismissInterstitialAndAdvanceLevel,
+      advanceFromInterstitial,
       shareImageManager.share
     );
   } else {
+    // Capture the pointer so a drag that ends outside the canvas still
+    // delivers pointerup here. Without it the pointer is never removed and its
+    // slingshot preview stays on screen.
+    canvasManager.getElement().setPointerCapture(pointerId);
+
     activePointers.push(
       makeActivePointer(
         canvasManager,
@@ -166,16 +181,29 @@ canvasManager.getElement().addEventListener("pointerdown", (e) => {
 
 canvasManager.getElement().addEventListener("pointerup", (e) => {
   const { pointerId, offsetX: x, offsetY: y } = e;
+  const releasedPointers = activePointers.filter(
+    (pointer) => pointerId === pointer.getId()
+  );
 
-  activePointers.forEach((pointer, pointerIndex) => {
-    if (pointerId === pointer.getId()) {
-      pointer.setPosition({ x, y });
-      activePointers.splice(pointerIndex, 1);
-      if (!levelManager.isInterstitialShowing()) pointer.trigger();
-    }
+  activePointers = activePointers.filter(
+    (pointer) => pointerId !== pointer.getId()
+  );
+
+  releasedPointers.forEach((pointer) => {
+    pointer.setPosition({ x, y });
+    if (!levelManager.isInterstitialShowing()) pointer.trigger();
   });
 
   e.preventDefault();
+});
+
+// The browser can take a pointer away mid-gesture, e.g. a system swipe or a
+// touch it decides belongs to something else. Drop it rather than leaving it
+// active and drawing forever.
+canvasManager.getElement().addEventListener("pointercancel", (e) => {
+  activePointers = activePointers.filter(
+    (pointer) => e.pointerId !== pointer.getId()
+  );
 });
 
 canvasManager.getElement().addEventListener("pointermove", (e) => {
@@ -194,10 +222,15 @@ canvasManager.getElement().addEventListener("pointermove", (e) => {
 document.addEventListener("keydown", ({ key }) => {
   const validKey = key === " " || key === "Enter";
 
-  if (validKey && levelManager.isGameOver()) {
-    resetGame();
-  } else if (validKey && levelManager.isInterstitialShowing()) {
-    levelManager.dismissInterstitialAndAdvanceLevel();
+  // Gated on the button's own delay so the keyboard can't skip an interstitial
+  // before its button is live
+  if (
+    validKey &&
+    levelManager.isInterstitialShowing() &&
+    interstitialButtonManager.hasDelayPassed()
+  ) {
+    document.body.classList.remove("buttonHover");
+    advanceFromInterstitial();
   }
 });
 
@@ -237,12 +270,14 @@ const cameraWrapper = (drawFunc) => {
 };
 
 const triggerTimedOutHoldBlasts = () => {
-  activePointers.forEach((p, pointerIndex) => {
-    if (p.isHoldBlast() && p.getDuration() >= BLAST_MAX_DURATION) {
-      activePointers.splice(pointerIndex, 1);
-      p.trigger();
-    }
-  });
+  const timedOut = activePointers.filter(
+    (p) => p.isHoldBlast() && p.getDuration() >= BLAST_MAX_DURATION
+  );
+
+  if (timedOut.length) {
+    activePointers = activePointers.filter((p) => !timedOut.includes(p));
+    timedOut.forEach((p) => p.trigger());
+  }
 };
 
 const detectCollisionsForGameObjects = () => {
@@ -469,9 +504,15 @@ function onPointerTrigger(output) {
 }
 
 function onPop() {
-  if (balls.filter((b) => b.inPlay()) <= 0) {
-    // Pause before showing interstitial so user can see the final bubble pop
-    setTimeout(levelManager.showLevelInterstitial, 600);
+  if (balls.filter((b) => b.inPlay()).length === 0) {
+    // Pause before showing interstitial so user can see the final bubble pop.
+    // Tracked so that losing the last life inside this window doesn't let a
+    // stale timer restart the game over screen behind the player.
+    clearTimeout(showInterstitialTimeout);
+    showInterstitialTimeout = setTimeout(
+      levelManager.showLevelInterstitial,
+      600
+    );
   }
 }
 
@@ -483,7 +524,7 @@ function onMiss() {
 
     if (lifeManager.getLives() <= 0) {
       onGameEnd();
-    } else if (balls.filter((b) => b.inPlay()) <= 0) {
+    } else if (balls.filter((b) => b.inPlay()).length === 0) {
       if (levelManager.getLevel() === 1) {
         levelManager.setMissedFirstBubble();
       }
@@ -493,12 +534,13 @@ function onMiss() {
 }
 
 function onTutorialPop() {
-  if (balls.filter((b) => b.inPlay()) <= 0) {
+  if (balls.filter((b) => b.inPlay()).length === 0) {
     tutorialManager.advance();
   }
 }
 
 function onGameEnd() {
+  clearTimeout(showInterstitialTimeout);
   audioManager.playLose();
   levelManager.onGameOver();
 }
