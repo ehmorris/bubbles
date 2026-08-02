@@ -41,9 +41,12 @@ const populateListOfLevels = () => {
 
 const updateName = (newName) => (currentlyDisplayedData.name = newName);
 
-const updatePar = (newPar) => (currentlyDisplayedData.par = newPar);
+// Input values are strings. Exported as strings, par ends up concatenated
+// rather than summed when the game totals it across levels.
+const updatePar = (newPar) => (currentlyDisplayedData.par = parseInt(newPar));
 
-const updateGravity = (newGrav) => (currentlyDisplayedData.gravity = newGrav);
+const updateGravity = (newGrav) =>
+  (currentlyDisplayedData.gravity = parseFloat(newGrav));
 
 const updateLevelHref = () => {
   openPreviewEl.setAttribute(
@@ -132,7 +135,6 @@ layoutParEl.addEventListener("input", (e) => {
   e.preventDefault();
 });
 
-// This is triggering an error at L206 for some reason
 layoutGravityEl.addEventListener("change", (e) => {
   updateGravity(e.target.value);
   updateLevelHref();
@@ -168,10 +170,11 @@ document.addEventListener("keydown", (e) => {
       fillCell(selectedBallRow, selectedBallCell, makeLevelEmptyCell());
       clearSelection();
     }
-    if (key === "ArrowUp") ball.velocity.y--;
-    if (key === "ArrowRight") ball.velocity.x++;
-    if (key === "ArrowDown") ball.velocity.y++;
-    if (key === "ArrowLeft") ball.velocity.x--;
+    // makeLevelBall stores velocity under `v`
+    if (key === "ArrowUp") ball.v.y--;
+    if (key === "ArrowRight") ball.v.x++;
+    if (key === "ArrowDown") ball.v.y++;
+    if (key === "ArrowLeft") ball.v.x--;
     if (key === "Tab") {
       if (shiftKey) {
         const prevBallCellIndex = currentlyDisplayedData.balls[
