@@ -77,11 +77,6 @@ export const makeSlingshot = (
       (startPosition.y - endPosition.y) ** 2
   );
 
-  // TODO something wrong here:
-  // * Point slingshot down and left
-  // * Pull back far
-  // * Release
-  // * Slingshot has the wrong angle
   const startVelocity = getVelocityFromSpeedAndHeading(
     distance / 10,
     getHeadingInRadsFromTwoPoints(startPosition, endPosition)
@@ -96,6 +91,12 @@ export const makeSlingshot = (
     startPosition: { ...endPosition },
     startVelocity,
     gravity: GRAVITY,
+    // particle.update caps how far a particle moves down each frame but never
+    // caps how far it moves sideways, so a fast downward shot crawls down while
+    // still racing across — a slingshot aimed 45° down-left left at nearly 15°
+    // once pulled far enough. Its speed is already set at launch, so don't cap
+    // it. Pop pieces and sparks opt out the same way.
+    terminalVelocity: Infinity,
     onRightPassed: onLeaveScreen,
     onBottomPassed: onLeaveScreen,
     onLeftPassed: onLeaveScreen,
