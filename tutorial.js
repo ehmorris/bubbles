@@ -27,10 +27,13 @@ export const makeTutorialManager = (
     },
     []
   );
+  // Passed as a getter: the data is built once, so a captured stepStarted
+  // stayed at the construction time and later steps' arrows skipped their
+  // animation entirely
   const tutorialData = makeTutorialData(
     canvasManager,
     textManager,
-    stepStarted
+    () => stepStarted
   );
   textManager.updateLines(tutorialData[0].initialText);
 
@@ -141,7 +144,7 @@ export const makeTutorialManager = (
   };
 };
 
-function makeTutorialData(canvasManager, textManager, stepStarted) {
+function makeTutorialData(canvasManager, textManager, getStepStarted) {
   return [
     {
       initialText: ["Pop this"],
@@ -151,7 +154,7 @@ function makeTutorialData(canvasManager, textManager, stepStarted) {
           canvasManager,
           textManager.getBoundingBox().bottom + 12,
           canvasManager.getHeight() / 2 - BUBBLE_RADIUS - 32,
-          stepStarted,
+          getStepStarted(),
           white
         );
       },
@@ -189,7 +192,7 @@ function makeTutorialData(canvasManager, textManager, stepStarted) {
           canvasManager,
           textManager.getBoundingBox().bottom + 12,
           canvasManager.getHeight() / 2,
-          stepStarted,
+          getStepStarted(),
           white
         );
       },
