@@ -20,34 +20,35 @@ export const makeShareImageManager = (scoreStore, levelManager) => {
   );
 
   const CTX = shareImageCanvasManager.getContext();
-  let captureStart = Date.now();
   let numCapturesTaken = 0;
+  let lastCaptureUsed = -1;
   let captureToken = 0;
   let shareFile = false;
 
   const update = () => {
     shareImageScoreDisplay.update();
-    captureStart = Date.now();
     numCapturesTaken = 0;
+    lastCaptureUsed = -1;
     shareFile = false;
     captureToken++;
   };
 
-  const captureShareImage = () => {
+  const captureShareImage = (sequence) => {
     const token = captureToken;
 
     shareImageCanvasManager
       .getElement()
       .convertToBlob({ type: "image/jpeg", quality: 0.8 })
       .then((blob) => {
-        if (token === captureToken) {
+        if (token === captureToken && sequence > lastCaptureUsed) {
+          lastCaptureUsed = sequence;
           shareFile = new File([blob], "bubbles.jpeg", { type: "image/jpeg" });
         }
       })
       .catch(() => {});
   };
 
-  const draw = (deltaTime) => {
+  const draw = (deltaTime, msElapsed) => {
     const settledHeight = shareImageScoreDisplay.getCurrentHeight();
     if (
       settledHeight &&
@@ -89,10 +90,9 @@ export const makeShareImageManager = (scoreStore, levelManager) => {
 
     if (
       numCapturesTaken < CAPTURE_DELAYS.length &&
-      Date.now() - captureStart > CAPTURE_DELAYS[numCapturesTaken]
+      msElapsed > CAPTURE_DELAYS[numCapturesTaken]
     ) {
-      numCapturesTaken++;
-      captureShareImage();
+      captureShareImage(numCapturesTaken++);
     }
   };
 
