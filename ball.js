@@ -75,9 +75,6 @@ export const makeBall = (
   }
 
   const pop = (popperVelocity = false) => {
-    // Two overlapping blasts, or a blast and a tap in the same frame, can both
-    // reach the same bubble. Popping twice restarted the animation and fired
-    // onPop a second time.
     if (popped) return;
 
     const transferringVelocity = popperVelocity

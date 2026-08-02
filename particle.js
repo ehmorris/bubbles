@@ -28,12 +28,6 @@ export const makeParticle = (
     position.y += Math.min(deltaTimeMultiplier * velocity.y, terminalVelocity);
     velocity.y += deltaTimeMultiplier * gravity;
 
-    // The two axes are checked independently. As one chain, a particle sitting
-    // within its own radius of the left or right edge matched the horizontal
-    // case every frame and the vertical checks were never reached — so a
-    // slingshot released nearly vertically along an edge never got its
-    // onBottomPassed call and was never marked gone, and a bubble hugging a
-    // wall as it fell off the bottom never counted as missed.
     if (position.x > canvasManager.getWidth() + radius) {
       onRightPassed(position, velocity);
     } else if (position.x > canvasManager.getWidth() - radius) {

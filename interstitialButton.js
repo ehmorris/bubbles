@@ -264,16 +264,12 @@ function makeContinueButton(canvasManager, shareButton) {
   const CTX = canvasManager.getContext();
   const height = 72;
 
-  // One color shared by both widths. Rolling separately meant the button
-  // changed color the moment a share button appeared beside it.
   const fill = randomColor();
   let fullWidth;
   let partialWidth;
   let fullButtonPath;
   let partialButtonPath;
 
-  // The transforms below read the canvas size live, so the paths have to be
-  // rebuilt to match or the button draws and hit-tests at its old width
   const buildPaths = () => {
     fullWidth = canvasManager.getWidth() - edgeMargin * 2;
     partialWidth =

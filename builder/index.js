@@ -41,8 +41,6 @@ const populateListOfLevels = () => {
 
 const updateName = (newName) => (currentlyDisplayedData.name = newName);
 
-// Input values are strings. Exported as strings, par ends up concatenated
-// rather than summed when the game totals it across levels.
 const updatePar = (newPar) => (currentlyDisplayedData.par = parseInt(newPar));
 
 const updateGravity = (newGrav) =>
@@ -170,7 +168,6 @@ document.addEventListener("keydown", (e) => {
       fillCell(selectedBallRow, selectedBallCell, makeLevelEmptyCell());
       clearSelection();
     }
-    // makeLevelBall stores velocity under `v`
     if (key === "ArrowUp") ball.v.y--;
     if (key === "ArrowRight") ball.v.x++;
     if (key === "ArrowDown") ball.v.y++;

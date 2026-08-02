@@ -385,9 +385,6 @@ export const makeScoreDisplay = (
 
   function drawBlastItem(blast, index) {
     const { popped } = blast;
-    // Clamped like taps and slingshots. Without this the later icons in a long
-    // list are still scaled near zero — invisible — well after the share button
-    // unlocks, so they were missing from shared images.
     const animationDelay = Math.min(index * 88, 880);
     const textHeight = 17.2;
     const scaleIn = transition(
@@ -401,9 +398,6 @@ export const makeScoreDisplay = (
       easeOutQuad
     );
 
-    // The jittered polygon depends only on the blast's power, so generate it
-    // once and keep it on the event. Rebuilding it every frame made the icon
-    // shimmer and made two captures of the same share image differ.
     if (!blast.iconVertices) {
       const blastIconNumVertices = 12;
       const blastIconRadius = transition(

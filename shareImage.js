@@ -3,18 +3,6 @@ import { makeScoreDisplay } from "./scoreDisplay.js";
 import { background, yellow } from "./colors.js";
 import { FONT_WEIGHT_BOLD, FONT_WEIGHT_NORMAL, FONT } from "./constants.js";
 
-// The share image is encoded ahead of the tap so that share() can hand it to
-// navigator.share() without awaiting anything. Snapshots are taken at moments
-// where the score display has settled:
-//
-// * 880ms: after the 816ms slide-up finishes (getCurrentHeight() reports the
-//   settled height, so capturing mid-slide clips the bottom) and before the
-//   mid-game share button unlocks at 960ms.
-// * 1900ms: just before the end-of-game share button unlocks at 1920ms.
-// * 3800ms: after the longest icon animation, the missed-tap ripple.
-//
-// The first two are pinned to the `delay` values in index.js. If those move,
-// these move.
 const CAPTURE_DELAYS = [880, 1900, 3800];
 
 export const makeShareImageManager = (scoreStore, levelManager) => {
@@ -41,14 +29,10 @@ export const makeShareImageManager = (scoreStore, levelManager) => {
     shareImageScoreDisplay.update();
     captureStart = Date.now();
     numCapturesTaken = 0;
-    // Discard the previous interstitial's image, and make any encode still in
-    // flight for it a no-op
     shareFile = false;
     captureToken++;
   };
 
-  // convertToBlob copies the bitmap synchronously and encodes off-thread, so
-  // calling this at the end of draw() captures the frame just painted
   const captureShareImage = () => {
     const token = captureToken;
 
@@ -64,11 +48,6 @@ export const makeShareImageManager = (scoreStore, levelManager) => {
   };
 
   const draw = (deltaTime) => {
-    // Resize before painting anything. Changing the height of an OffscreenCanvas
-    // clears its bitmap and resets the context, so resizing partway through the
-    // frame wipes everything drawn so far — which used to leave the image as
-    // just the header on black. getCurrentHeight() is null until the score
-    // display has drawn once, and a null height would floor the bitmap to 0.
     const settledHeight = shareImageScoreDisplay.getCurrentHeight();
     if (
       settledHeight &&
@@ -156,20 +135,11 @@ https://ehmorris.com/bubbles
     }
 `;
 
-    // Everything from here has to run in the same turn as the pointer event.
-    // Awaiting the image encode first spends the transient user activation, and
-    // iOS Safari then rejects navigator.share() — the first tap did nothing and
-    // the second worked only because the encoder was warm enough to land inside
-    // the activation window.
     const fileData = shareFile
       ? { files: [shareFile], text: shareText }
       : false;
     const textData = { text: shareText };
 
-    // Fall back through image + text, then text alone, then the clipboard. The
-    // image is only missing if the tab was backgrounded so the capture never
-    // ran, and text-only sharing beats silently copying (desktop Chrome can't
-    // share files but does have a share sheet).
     const shareData =
       fileData && navigator.canShare && navigator.canShare(fileData)
         ? fileData
@@ -184,8 +154,6 @@ https://ehmorris.com/bubbles
 
     try {
       navigator.share(shareData).catch((error) => {
-        // Dismissing the share sheet rejects with AbortError. The player
-        // changed their mind, so there's nothing to recover from.
         if (error.name !== "AbortError") copyShareText(shareText);
       });
     } catch (e) {
