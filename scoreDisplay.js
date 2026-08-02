@@ -383,20 +383,13 @@ export const makeScoreDisplay = (
     CTX.fillText(`x${popped}`, 30, iconRadius + textHeight / 2);
   }
 
-  function drawBlastItem({ popped, power }, index) {
-    const animationDelay = index * 88;
+  function drawBlastItem(blast, index) {
+    const { popped } = blast;
+    // Clamped like taps and slingshots. Without this the later icons in a long
+    // list are still scaled near zero — invisible — well after the share button
+    // unlocks, so they were missing from shared images.
+    const animationDelay = Math.min(index * 88, 880);
     const textHeight = 17.2;
-    const blastIconNumVertices = 12;
-    const blastIconRadius = transition(
-      iconRadius / 3,
-      iconRadius * 1.2,
-      clampedProgress(0, BLAST_MAX_SIZE, power)
-    );
-    const blastIconJitter = transition(
-      1,
-      2.25,
-      clampedProgress(0, BLAST_MAX_SIZE, power)
-    );
     const scaleIn = transition(
       0,
       1,
@@ -408,19 +401,36 @@ export const makeScoreDisplay = (
       easeOutQuad
     );
 
-    const blastIconVertices = new Array(blastIconNumVertices)
-      .fill()
-      .map((_, index) => {
-        const angle = (index / blastIconNumVertices) * Math.PI * 2;
-        const distance = randomBetween(
-          blastIconRadius - blastIconJitter,
-          blastIconRadius + blastIconJitter
-        );
-        return {
-          x: Math.cos(angle) * distance,
-          y: Math.sin(angle) * distance,
-        };
-      });
+    // The jittered polygon depends only on the blast's power, so generate it
+    // once and keep it on the event. Rebuilding it every frame made the icon
+    // shimmer and made two captures of the same share image differ.
+    if (!blast.iconVertices) {
+      const blastIconNumVertices = 12;
+      const blastIconRadius = transition(
+        iconRadius / 3,
+        iconRadius * 1.2,
+        clampedProgress(0, BLAST_MAX_SIZE, blast.power)
+      );
+      const blastIconJitter = transition(
+        1,
+        2.25,
+        clampedProgress(0, BLAST_MAX_SIZE, blast.power)
+      );
+
+      blast.iconVertices = new Array(blastIconNumVertices)
+        .fill()
+        .map((_, index) => {
+          const angle = (index / blastIconNumVertices) * Math.PI * 2;
+          const distance = randomBetween(
+            blastIconRadius - blastIconJitter,
+            blastIconRadius + blastIconJitter
+          );
+          return {
+            x: Math.cos(angle) * distance,
+            y: Math.sin(angle) * distance,
+          };
+        });
+    }
 
     CTX.save();
     if (popped > 0) {
@@ -434,7 +444,7 @@ export const makeScoreDisplay = (
     CTX.translate(iconRadius, iconRadius);
     CTX.scale(scaleIn, scaleIn);
     CTX.beginPath();
-    blastIconVertices.forEach(({ x, y }, index) => {
+    blast.iconVertices.forEach(({ x, y }, index) => {
       index === 0 ? CTX.moveTo(x, y) : CTX.lineTo(x, y);
     });
     CTX.closePath();
