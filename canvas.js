@@ -10,13 +10,21 @@ export const makeCanvasManager = ({
   const context = element.getContext("2d", {
     colorSpace: "display-p3",
   });
-  const scale = window.devicePixelRatio;
+  const resizeSubscribers = [];
+  // Re-read on every resize rather than captured once: browser zoom and moving
+  // a window between monitors change it, and a stale value leaves the backing
+  // store at the wrong resolution
+  let scale = window.devicePixelRatio;
 
   const setCanvasSize = () => {
+    scale = window.devicePixelRatio;
     element.style.width = width + "px";
     element.style.height = height + "px";
     element.width = Math.floor(width * scale);
     element.height = Math.floor(height * scale);
+    // Assigning width or height resets the transform, but say so explicitly
+    // rather than depending on it
+    context.setTransform(1, 0, 0, 1, 0, 0);
     context.scale(scale, scale);
   };
 
@@ -28,6 +36,7 @@ export const makeCanvasManager = ({
     width = Math.min(window.innerWidth, maxWidth);
     height = window.innerHeight;
     setCanvasSize();
+    resizeSubscribers.forEach((subscriber) => subscriber());
   });
 
   return {
@@ -36,6 +45,8 @@ export const makeCanvasManager = ({
     getWidth: () => width,
     getHeight: () => height,
     getScaleFactor: () => scale,
+    // For anything that caches a measurement taken from the canvas size
+    onResize: (subscriber) => resizeSubscribers.push(subscriber),
   };
 };
 
@@ -63,6 +74,7 @@ export const makeOffscreenCanvas = ({
 
     offscreenElement.width = Math.floor(_width * _scale);
     offscreenElement.height = Math.floor(_height * _scale);
+    context.setTransform(1, 0, 0, 1, 0, 0);
     context.scale(_scale, _scale);
   };
 

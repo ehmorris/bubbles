@@ -70,7 +70,10 @@ export const makeShareImageManager = (scoreStore, levelManager) => {
     // just the header on black. getCurrentHeight() is null until the score
     // display has drawn once, and a null height would floor the bitmap to 0.
     const settledHeight = shareImageScoreDisplay.getCurrentHeight();
-    if (settledHeight && shareImageCanvasManager.getHeight() !== settledHeight) {
+    if (
+      settledHeight &&
+      shareImageCanvasManager.getHeight() !== settledHeight
+    ) {
       shareImageCanvasManager.setCanvasSize({ height: settledHeight });
     }
 

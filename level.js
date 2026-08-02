@@ -32,8 +32,8 @@ export const makeLevelManager = (
   const levelCountdownText = makeTextBlock(
     canvasManager,
     {
-      xPos: canvasManager.getWidth() / 2,
-      yPos: canvasManager.getHeight() / 2 - circleRadius + 3,
+      xPos: () => canvasManager.getWidth() / 2,
+      yPos: () => canvasManager.getHeight() / 2 - circleRadius + 3,
       textAlign: "center",
       verticalAlign: "center",
       fontSize: 32,
@@ -45,8 +45,8 @@ export const makeLevelManager = (
   const overallParLabel = makeTextBlock(
     canvasManager,
     {
-      xPos: canvasManager.getWidth() / 2,
-      yPos: canvasManager.getHeight() / 2 + circleRadius - 27,
+      xPos: () => canvasManager.getWidth() / 2,
+      yPos: () => canvasManager.getHeight() / 2 + circleRadius - 27,
       textAlign: "center",
       verticalAlign: "center",
       fontWeight: FONT_WEIGHT_BOLD,
@@ -61,8 +61,8 @@ export const makeLevelManager = (
   const overallParText = makeTextBlock(
     canvasManager,
     {
-      xPos: canvasManager.getWidth() / 2,
-      yPos: canvasManager.getHeight() / 2 + circleRadius,
+      xPos: () => canvasManager.getWidth() / 2,
+      yPos: () => canvasManager.getHeight() / 2 + circleRadius,
       textAlign: "center",
       verticalAlign: "center",
       fontSize: 24,

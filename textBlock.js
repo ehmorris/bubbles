@@ -26,6 +26,13 @@ export const makeTextBlock = (
     verticalAlign === "center" ? (linesArray.length / 2) * lineHeight : 0;
   let yPos = initialYPos;
 
+  // Positions derived from the canvas size are passed as functions so they
+  // stay correct after a resize or an orientation change
+  const resolvePosition = (position) =>
+    typeof position === "function" ? position() : position;
+  const getXPos = () => resolvePosition(xPos);
+  const getYPos = () => resolvePosition(yPos);
+
   const positionSpring = makeSpring(lineHeight, {
     stiffness: 120,
     damping: 13,
@@ -50,10 +57,11 @@ export const makeTextBlock = (
 
   const getBoundingBox = () => {
     const leading = lineHeight - fontSize;
+    const top = getYPos() - verticalOffset + leading;
 
     return {
-      top: yPos - verticalOffset + leading,
-      bottom: yPos - verticalOffset + leading + lineHeight * linesArray.length,
+      top,
+      bottom: top + lineHeight * linesArray.length,
     };
   };
 
@@ -66,7 +74,8 @@ export const makeTextBlock = (
       CTX.fillStyle = fill;
       CTX.textAlign = textAlign;
       CTX.letterSpacing = letterSpacing;
-      CTX.translate(xPos, yPos - verticalOffset);
+      const currentXPos = getXPos();
+      CTX.translate(currentXPos, getYPos() - verticalOffset);
       linesArray.forEach((line, index) => {
         const lineYPos = (index + 1) * lineHeight;
 
@@ -75,7 +84,7 @@ export const makeTextBlock = (
         // Draw clipping mask
         CTX.beginPath();
         CTX.rect(
-          -xPos,
+          -currentXPos,
           lineYPos - fontSize,
           canvasManager.getWidth(),
           lineHeight
