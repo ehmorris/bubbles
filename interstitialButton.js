@@ -270,6 +270,9 @@ function makeContinueButton(canvasManager, shareButton) {
     spaceBetween;
   const height = 72;
 
+  // One color shared by both widths. Rolling separately meant the button
+  // changed color the moment a share button appeared beside it.
+  const fill = randomColor();
   const fullButtonPath = new Path2D();
   const partialButtonPath = new Path2D();
   fullButtonPath.roundRect(
@@ -298,7 +301,7 @@ function makeContinueButton(canvasManager, shareButton) {
         path: fullButtonPath,
         width: fullWidth,
         height,
-        fill: randomColor(),
+        fill,
       },
       partial: {
         transform: () =>
@@ -309,7 +312,7 @@ function makeContinueButton(canvasManager, shareButton) {
         path: partialButtonPath,
         width: partialWidth,
         height,
-        fill: randomColor(),
+        fill,
       },
     },
     spring: makeSpring(0, {

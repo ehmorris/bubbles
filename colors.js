@@ -76,7 +76,7 @@ const makeBitmap = (gradientFunc) => {
     -bubbleRadius2x
   );
   strokeGradient.addColorStop(0, "rgba(255, 255, 255, .4)");
-  strokeGradient.addColorStop(1, "rgba(255, 255, 255, 0");
+  strokeGradient.addColorStop(1, "rgba(255, 255, 255, 0)");
 
   preRenderContext.strokeStyle = strokeGradient;
   preRenderContext.lineWidth = 2;
@@ -109,5 +109,10 @@ export const randomColor = () => {
   return colors[Math.floor(Math.random() * colors.length)];
 };
 
-export const getGradientBitmap = (sourceColor) =>
-  gradientBitmaps.find((g) => g.sourceColor === sourceColor).bitmap;
+export const getGradientBitmap = (sourceColor) => {
+  const gradient = gradientBitmaps.find((g) => g.sourceColor === sourceColor);
+
+  // Level data can arrive from a URL, so the color isn't guaranteed to be one
+  // we've pre-rendered a bubble for
+  return gradient ? gradient.bitmap : whiteGradientBitmap;
+};

@@ -24,12 +24,15 @@ export const makeGrid = (
 
   const drawItems = (drawFunc) => {
     let truncatedIndex = false;
+    // Only give up the last cell to the "+N" badge when there are more items
+    // than fit. A grid that filled exactly was hiding a real item to show "+1".
+    const isTruncated = items.length > itemsPerRow * maxRows;
 
     items.forEach((item, index) => {
       const colIndex = index % itemsPerRow;
       const rowIndex = Math.floor(index / itemsPerRow);
       const lastRowItem =
-        rowIndex + 1 === maxRows && colIndex + 1 === itemsPerRow;
+        isTruncated && rowIndex + 1 === maxRows && colIndex + 1 === itemsPerRow;
 
       if (rowIndex < maxRows && !lastRowItem) {
         CTX.save();
@@ -41,12 +44,13 @@ export const makeGrid = (
 
         drawFunc(item, index);
         CTX.restore();
-      } else if (!truncatedIndex) {
+      } else if (truncatedIndex === false) {
+        // Not `!truncatedIndex` — index 0 is a valid place to start truncating
         truncatedIndex = index;
       }
     });
 
-    if (truncatedIndex) {
+    if (truncatedIndex !== false) {
       CTX.save();
       CTX.translate(
         edgeMargin +

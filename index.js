@@ -28,10 +28,22 @@ import { makeTutorialManager } from "./tutorial.js";
 import { makeFirework } from "./firework.js";
 import { makeShareImageManager } from "./shareImage.js";
 
+// Anyone can put anything after ?level=, and this runs at import time, so a
+// malformed payload would otherwise take the whole game down with it
+function parsePreviewData(encodedLevel) {
+  if (!encodedLevel) return false;
+
+  try {
+    const parsed = JSON.parse(atob(encodedLevel));
+    return Array.isArray(parsed?.balls) ? parsed : false;
+  } catch (e) {
+    return false;
+  }
+}
+
 const URLParams = new URLSearchParams(window.location.search);
-const previewData =
-  URLParams.get("level") && JSON.parse(atob(URLParams.get("level")));
-const previewDataPresent = !!window.location.search && previewData;
+const previewData = parsePreviewData(URLParams.get("level"));
+const previewDataPresent = !!previewData;
 
 if (previewDataPresent) {
   const previewTitle = `Bubbles! - “${previewData.name}”`;
