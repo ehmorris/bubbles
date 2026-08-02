@@ -20,8 +20,8 @@ export const makeTutorialManager = (
   const textManager = makeTextBlock(
     canvasManager,
     {
-      xPos: canvasManager.getWidth() / 2,
-      yPos: canvasManager.getHeight() / 2 - canvasManager.getHeight() / 4,
+      xPos: () => canvasManager.getWidth() / 2,
+      yPos: () => canvasManager.getHeight() / 2 - canvasManager.getHeight() / 4,
       textAlign: "center",
       verticalAlign: "center",
     },
@@ -148,7 +148,8 @@ function makeTutorialData(canvasManager, textManager, getStepStarted) {
   return [
     {
       initialText: ["Pop this"],
-      textYPos: canvasManager.getHeight() / 2 - canvasManager.getHeight() / 4,
+      textYPos: () =>
+        canvasManager.getHeight() / 2 - canvasManager.getHeight() / 4,
       draw: () => {
         drawCenteredDownwardsArrow(
           canvasManager,
@@ -172,21 +173,22 @@ function makeTutorialData(canvasManager, textManager, getStepStarted) {
     {
       timeout: 1800,
       initialText: ["Nice! But…"],
-      textYPos: canvasManager.getHeight() / 2 - 8,
+      textYPos: () => canvasManager.getHeight() / 2 - 8,
       balls: [],
       allowedGestures: [],
     },
     {
       timeout: 2300,
       initialText: ["What if there are more?"],
-      textYPos: canvasManager.getHeight() / 2 - 8,
+      textYPos: () => canvasManager.getHeight() / 2 - 8,
       balls: [],
       allowedGestures: [],
     },
     {
       initialText: ["Hold down in", "the center"],
       confirmationText: ["Now let go!"],
-      textYPos: canvasManager.getHeight() / 2 - canvasManager.getHeight() / 3,
+      textYPos: () =>
+        canvasManager.getHeight() / 2 - canvasManager.getHeight() / 3,
       draw: () => {
         drawCenteredDownwardsArrow(
           canvasManager,
@@ -231,28 +233,28 @@ function makeTutorialData(canvasManager, textManager, getStepStarted) {
     {
       timeout: 1100,
       initialText: ["Boom!"],
-      textYPos: canvasManager.getHeight() / 2 - 8,
+      textYPos: () => canvasManager.getHeight() / 2 - 8,
       balls: [],
       allowedGestures: [],
     },
     {
       timeout: 2000,
       initialText: ["That’s called a “blast”"],
-      textYPos: canvasManager.getHeight() / 2 - 8,
+      textYPos: () => canvasManager.getHeight() / 2 - 8,
       balls: [],
       allowedGestures: [],
     },
     {
       timeout: 1900,
       initialText: ["One last thing…"],
-      textYPos: canvasManager.getHeight() / 2 - 8,
+      textYPos: () => canvasManager.getHeight() / 2 - 8,
       balls: [],
       allowedGestures: [],
     },
     {
       initialText: ["Drag down", "", "Start right here"],
       confirmationText: ["Let go!"],
-      textYPos: canvasManager.getHeight() / 2,
+      textYPos: () => canvasManager.getHeight() / 2,
       balls: [
         {
           position: {
@@ -281,14 +283,14 @@ function makeTutorialData(canvasManager, textManager, getStepStarted) {
     {
       timeout: 2600,
       initialText: ["Those are all the", "ways to pop bubbles"],
-      textYPos: canvasManager.getHeight() / 2 - 8,
+      textYPos: () => canvasManager.getHeight() / 2 - 8,
       balls: [],
       allowedGestures: [],
     },
     {
       timeout: 1800,
       initialText: ["You’re ready to play"],
-      textYPos: canvasManager.getHeight() / 2 - 8,
+      textYPos: () => canvasManager.getHeight() / 2 - 8,
       balls: [],
       allowedGestures: [],
     },

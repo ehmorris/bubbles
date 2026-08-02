@@ -80,8 +80,8 @@ const interstitialButtonManager = makeInterstitialButtonManager(canvasManager);
 const interstitialText = makeTextBlock(
   canvasManager,
   {
-    xPos: canvasManager.getWidth() / 2,
-    yPos: canvasManager.getHeight() / 2,
+    xPos: () => canvasManager.getWidth() / 2,
+    yPos: () => canvasManager.getHeight() / 2,
     textAlign: "center",
     verticalAlign: "center",
   },

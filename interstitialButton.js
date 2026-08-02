@@ -262,33 +262,46 @@ function makeShareButton(canvasManager) {
 
 function makeContinueButton(canvasManager, shareButton) {
   const CTX = canvasManager.getContext();
-  const fullWidth = canvasManager.getWidth() - edgeMargin * 2;
-  const partialWidth =
-    canvasManager.getWidth() -
-    edgeMargin * 2 -
-    shareButton.sizes.default.width -
-    spaceBetween;
   const height = 72;
 
   // One color shared by both widths. Rolling separately meant the button
   // changed color the moment a share button appeared beside it.
   const fill = randomColor();
-  const fullButtonPath = new Path2D();
-  const partialButtonPath = new Path2D();
-  fullButtonPath.roundRect(
-    -fullWidth / 2,
-    -height / 2,
-    fullWidth,
-    height,
-    borderRadius
-  );
-  partialButtonPath.roundRect(
-    -partialWidth / 2,
-    -height / 2,
-    partialWidth,
-    height,
-    borderRadius
-  );
+  let fullWidth;
+  let partialWidth;
+  let fullButtonPath;
+  let partialButtonPath;
+
+  // The transforms below read the canvas size live, so the paths have to be
+  // rebuilt to match or the button draws and hit-tests at its old width
+  const buildPaths = () => {
+    fullWidth = canvasManager.getWidth() - edgeMargin * 2;
+    partialWidth =
+      canvasManager.getWidth() -
+      edgeMargin * 2 -
+      shareButton.sizes.default.width -
+      spaceBetween;
+
+    fullButtonPath = new Path2D();
+    partialButtonPath = new Path2D();
+    fullButtonPath.roundRect(
+      -fullWidth / 2,
+      -height / 2,
+      fullWidth,
+      height,
+      borderRadius
+    );
+    partialButtonPath.roundRect(
+      -partialWidth / 2,
+      -height / 2,
+      partialWidth,
+      height,
+      borderRadius
+    );
+  };
+
+  buildPaths();
+  canvasManager.onResize(buildPaths);
 
   return {
     sizes: {
@@ -298,8 +311,12 @@ function makeContinueButton(canvasManager, shareButton) {
             canvasManager.getWidth() / 2,
             canvasManager.getHeight() - edgeMargin - height / 2
           ),
-        path: fullButtonPath,
-        width: fullWidth,
+        get path() {
+          return fullButtonPath;
+        },
+        get width() {
+          return fullWidth;
+        },
         height,
         fill,
       },
@@ -309,8 +326,12 @@ function makeContinueButton(canvasManager, shareButton) {
             edgeMargin + partialWidth / 2,
             canvasManager.getHeight() - edgeMargin - height / 2
           ),
-        path: partialButtonPath,
-        width: partialWidth,
+        get path() {
+          return partialButtonPath;
+        },
+        get width() {
+          return partialWidth;
+        },
         height,
         fill,
       },
