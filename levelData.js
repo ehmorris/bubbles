@@ -731,6 +731,21 @@ export const countLevelBalls = ({ balls }) =>
 
 export const getLevelDataByNumber = (level) => levels[level - 1];
 
+export const encodeLevel = (level) => {
+  const bytes = new TextEncoder().encode(JSON.stringify(level));
+  let binary = "";
+  bytes.forEach((byte) => (binary += String.fromCharCode(byte)));
+
+  return btoa(binary);
+};
+
+export const decodeLevel = (encoded) =>
+  JSON.parse(
+    new TextDecoder().decode(
+      Uint8Array.from(atob(encoded), (character) => character.charCodeAt(0))
+    )
+  );
+
 export const makeLevelBalls = (canvasManager, level, onPop, onMiss) => {
   const balls = [];
   level.balls.forEach((row, rowIndex) => {
