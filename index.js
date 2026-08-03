@@ -22,7 +22,7 @@ import { makeInterstitialButtonManager } from "./interstitialButton.js";
 import { makeActivePointer } from "./activePointer.js";
 import { makeTextBlock } from "./textBlock.js";
 import { makeScoreDisplay } from "./scoreDisplay.js";
-import { makeLevelBalls } from "./levelData.js";
+import { makeLevelBalls, decodeLevel } from "./levelData.js";
 import { makeScoreStore } from "./scoreStore.js";
 import { makeTutorialManager } from "./tutorial.js";
 import { makeFirework } from "./firework.js";
@@ -32,7 +32,7 @@ function parsePreviewData(encodedLevel) {
   if (!encodedLevel) return false;
 
   try {
-    const parsed = JSON.parse(atob(encodedLevel));
+    const parsed = decodeLevel(encodedLevel);
     return Array.isArray(parsed?.balls) ? parsed : false;
   } catch (e) {
     return false;

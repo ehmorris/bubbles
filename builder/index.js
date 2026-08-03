@@ -6,6 +6,7 @@ import {
   makeLevelBall,
   makeLevelEmptyCell,
   makeLevelEmptyRow,
+  encodeLevel,
 } from "../levelData.js";
 
 let currentlyDisplayedData = {
@@ -41,33 +42,36 @@ const populateListOfLevels = () => {
 
 const updateName = (newName) => (currentlyDisplayedData.name = newName);
 
-const updatePar = (newPar) => (currentlyDisplayedData.par = parseInt(newPar));
+const updatePar = (newPar) => {
+  const parsed = parseInt(newPar);
+  if (!Number.isNaN(parsed)) currentlyDisplayedData.par = parsed;
+};
 
-const updateGravity = (newGrav) =>
-  (currentlyDisplayedData.gravity = parseFloat(newGrav));
+const updateGravity = (newGrav) => {
+  const parsed = parseFloat(newGrav);
+  if (!Number.isNaN(parsed)) currentlyDisplayedData.gravity = parsed;
+};
 
 const updateLevelHref = () => {
-  openPreviewEl.setAttribute(
-    "href",
-    window.location.href.replace(
-      "/builder/",
-      `/?level=${btoa(JSON.stringify(currentlyDisplayedData))}`
-    )
-  );
+  const encodedLevel = encodeLevel(currentlyDisplayedData);
+  const previewURL = new URL("../", window.location.href);
+  previewURL.search = new URLSearchParams({ level: encodedLevel }).toString();
+
+  openPreviewEl.setAttribute("href", previewURL.toString());
 
   const levelInCodeBlock = `\`\`\` JSON\n${JSON.stringify(
     currentlyDisplayedData
   )}\n\`\`\``;
-  const playLink = `[Play Preview](https://ehmorris.com/bubbles/?level=${btoa(
-    JSON.stringify(currentlyDisplayedData)
+  const playLink = `[Play Preview](https://ehmorris.com/bubbles/?level=${encodeURIComponent(
+    encodedLevel
   )})`;
   const discussionText = `Please write something interesting here about this level\n---\n${levelInCodeBlock}\n\n${playLink}`;
 
   submitLevelEl.setAttribute(
     "href",
-    `https://github.com/ehmorris/bubbles/discussions/new?category=level-suggestions&title=${
+    `https://github.com/ehmorris/bubbles/discussions/new?category=level-suggestions&title=${encodeURIComponent(
       currentlyDisplayedData.name
-    }&body=${encodeURIComponent(discussionText)}`
+    )}&body=${encodeURIComponent(discussionText)}`
   );
 };
 
@@ -104,7 +108,7 @@ const clearSelection = () => {
 };
 
 const deleteRow = (rowIndex) => {
-  if (rowIndex === selectedBallRow) clearSelection();
+  clearSelection();
 
   currentlyDisplayedData.balls.splice(rowIndex, 1);
 };
@@ -118,8 +122,13 @@ const addRow = () => {
     selectCell(parseInt(selectedBallRow) + 1, selectedBallCell);
 };
 
-const copyJSON = () =>
-  navigator.clipboard.writeText(`${JSON.stringify(currentlyDisplayedData)},`);
+const copyJSON = () => {
+  if (!navigator.clipboard || !navigator.clipboard.writeText) return;
+
+  navigator.clipboard
+    .writeText(`${JSON.stringify(currentlyDisplayedData)},`)
+    .catch(() => {});
+};
 
 layoutNameEl.addEventListener("input", (e) => {
   updateName(e.target.value);
@@ -144,24 +153,30 @@ addRowEl.addEventListener("pointerdown", addRow);
 copyToClipboardEl.addEventListener("pointerdown", copyJSON);
 
 document.addEventListener("keydown", (e) => {
-  const { shiftKey, ctrlKey, key, repeat } = e;
+  const { shiftKey, ctrlKey, metaKey, key, repeat } = e;
+  const bareKey = !repeat && !shiftKey && !ctrlKey && !metaKey;
 
   if (document.activeElement.tagName === "INPUT") return false;
 
   // Action keyboard shortcuts
-  if (!repeat && !shiftKey && !ctrlKey && key === "r") {
+  if (bareKey && key === "r") {
     addRow();
     addRowEl.classList.add("actionsTop-button--active");
-  } else if (!repeat && key === "c") {
+  } else if (bareKey && key === "c") {
     copyJSON();
     copyToClipboardEl.classList.add("actionsBottom-button--active");
   }
 
   // Selected ball actions
   else if (selectedBallRow && selectedBallCell) {
-    const ball =
-      currentlyDisplayedData.balls[selectedBallRow][selectedBallCell];
+    const selectedRow = currentlyDisplayedData.balls[selectedBallRow];
+    const ball = selectedRow && selectedRow[selectedBallCell];
     const cellIndexInt = parseInt(selectedBallCell);
+
+    if (!ball) {
+      clearSelection();
+      return;
+    }
 
     // Adjust values
     if (key === "Backspace") {
@@ -252,8 +267,9 @@ document.addEventListener("pointerdown", ({ target }) => {
     deleteRow(clickedEl.getAttribute("data-row-index"));
     drawLevel();
   } else if (elIsLevel) {
-    currentlyDisplayedData =
-      gameLevels[clickedEl.getAttribute("data-level-index")];
+    currentlyDisplayedData = structuredClone(
+      gameLevels[clickedEl.getAttribute("data-level-index")]
+    );
     clearSelection();
     drawLevel();
     populateListOfLevels();
