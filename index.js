@@ -152,17 +152,17 @@ function advanceFromInterstitial() {
 canvasManager.getElement().addEventListener("pointerdown", (e) => {
   const { pointerId, offsetX: x, offsetY: y } = e;
 
+  try {
+    canvasManager.getElement().setPointerCapture(pointerId);
+  } catch (e) {}
+
   if (levelManager.isInterstitialShowing()) {
     interstitialButtonManager.handleClick(
       { x, y },
-      advanceFromInterstitial,
-      shareImageManager.share
+      pointerId,
+      advanceFromInterstitial
     );
   } else {
-    try {
-      canvasManager.getElement().setPointerCapture(pointerId);
-    } catch (e) {}
-
     activePointers.push(
       makeActivePointer(
         canvasManager,
@@ -199,6 +199,16 @@ canvasManager.getElement().addEventListener("pointerup", (e) => {
     if (!levelManager.isInterstitialShowing()) pointer.trigger();
   });
 
+  if (levelManager.isInterstitialShowing()) {
+    interstitialButtonManager.handleRelease(
+      { x, y },
+      pointerId,
+      shareImageManager.share
+    );
+  } else {
+    interstitialButtonManager.handleCancel(pointerId);
+  }
+
   e.preventDefault();
 });
 
@@ -206,6 +216,7 @@ canvasManager.getElement().addEventListener("pointercancel", (e) => {
   activePointers = activePointers.filter(
     (pointer) => e.pointerId !== pointer.getId()
   );
+  interstitialButtonManager.handleCancel(e.pointerId);
 });
 
 canvasManager.getElement().addEventListener("pointermove", (e) => {
@@ -215,7 +226,7 @@ canvasManager.getElement().addEventListener("pointermove", (e) => {
     if (pointerId === pointer.getId()) pointer.setPosition({ x, y });
   });
 
-  if (levelManager.isInterstitialShowing())
+  if (levelManager.isInterstitialShowing() && e.pointerType !== "touch")
     interstitialButtonManager.handleHover({ x, y });
 
   e.preventDefault();
