@@ -16,6 +16,7 @@ export const makeInterstitialButtonManager = (canvasManager) => {
   let isHoveringShareButton;
   let delayHasPassed;
   let showingShare = false;
+  let sharePointerId = null;
 
   const pointInButton = ({ x, y }, buttonSize) => {
     CTX.save();
@@ -44,7 +45,10 @@ export const makeInterstitialButtonManager = (canvasManager) => {
       isHoveringContinueButton = isContinueButtonHovered;
     }
 
-    if (isShareButtonHovered !== isHoveringShareButton) {
+    if (
+      sharePointerId === null &&
+      isShareButtonHovered !== isHoveringShareButton
+    ) {
       shareButton.spring.setEndValue(isShareButtonHovered ? 1 : 0);
       isHoveringShareButton = isShareButtonHovered;
     }
@@ -54,7 +58,7 @@ export const makeInterstitialButtonManager = (canvasManager) => {
       : document.body.classList.remove("buttonHover");
   };
 
-  const handleClick = (coordinates, onContinue, onShare) => {
+  const handleClick = (coordinates, pointerId, onContinue) => {
     if (!delayHasPassed) return;
 
     const continueButtonSize = showingShare
@@ -70,13 +74,31 @@ export const makeInterstitialButtonManager = (canvasManager) => {
       showingShare &&
       pointInButton(coordinates, shareButton.sizes.default)
     ) {
-      shareButton.spring
-        .setEndValue(-3)
-        .then(() => shareButton.spring.setEndValue(0));
+      shareButton.spring.setEndValue(-3);
+      sharePointerId = pointerId;
       isHoveringShareButton = false;
       document.body.classList.remove("buttonHover");
-      onShare();
     }
+  };
+
+  // navigator.share() needs transient user activation, which a touch
+  // pointerdown doesn't grant, so the share fires on release
+  const handleRelease = (coordinates, pointerId, onShare) => {
+    if (pointerId !== sharePointerId) return;
+    sharePointerId = null;
+
+    shareButton.spring
+      .setEndValue(-3)
+      .then(() => shareButton.spring.setEndValue(0));
+
+    if (showingShare && pointInButton(coordinates, shareButton.sizes.default))
+      onShare();
+  };
+
+  const handleCancel = (pointerId) => {
+    if (pointerId !== sharePointerId) return;
+    sharePointerId = null;
+    shareButton.spring.setEndValue(0);
   };
 
   const draw = (
@@ -217,6 +239,8 @@ export const makeInterstitialButtonManager = (canvasManager) => {
   return {
     draw,
     handleClick,
+    handleRelease,
+    handleCancel,
     handleHover,
     hasDelayPassed: () => !!delayHasPassed,
   };
